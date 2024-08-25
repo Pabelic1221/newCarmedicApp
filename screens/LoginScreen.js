@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/core';
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth } from '../firebase';
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -12,30 +12,32 @@ const LoginScreen = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
+      if (user && user.emailVerified) {
         navigation.replace("Home");
+      } else if (user && !user.emailVerified) {
+        alert("Please verify your email before logging in.");
       }
     });
 
     return unsubscribe;
   }, []);
 
-  const handleSignUp = () => {
-    createUserWithEmailAndPassword(auth, email, password)
-      .then(userCredentials => {
-        const user = userCredentials.user;
-        console.log('Registered with:', user.email);
-      })
-      .catch(error => alert(error.message));
-  };
-
   const handleLogin = () => {
     signInWithEmailAndPassword(auth, email, password)
       .then(userCredentials => {
         const user = userCredentials.user;
-        console.log('Logged in with:', user.email);
+        if (user.emailVerified) {
+          console.log('Logged in with:', user.email);
+          navigation.replace("Home");
+        } else {
+          alert("Please verify your email before logging in.");
+        }
       })
       .catch(error => alert(error.message));
+  };
+
+  const handleSignUpNavigation = () => {
+    navigation.navigate("UserRegister");
   };
 
   return (
@@ -67,10 +69,12 @@ const LoginScreen = () => {
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={handleSignUp}
-          style={[styles.button, styles.buttonOutline]}
+          onPress={handleSignUpNavigation}
+          style={styles.signUpTextContainer}
         >
-          <Text style={styles.buttonOutlineText}>Register</Text>
+          <Text style={styles.signUpText}>
+            Don't have an account? Sign up
+          </Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -108,18 +112,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
   },
-  buttonOutline: {
-    backgroundColor: 'white',
-    marginTop: 5,
-    borderColor: '#0782F9',
-    borderWidth: 2,
-  },
   buttonText: {
     color: 'white',
     fontWeight: '700',
     fontSize: 16,
   },
-  buttonOutlineText: {
+  signUpTextContainer: {
+    marginTop: 20,
+  },
+  signUpText: {
     color: '#0782F9',
     fontWeight: '700',
     fontSize: 16,
