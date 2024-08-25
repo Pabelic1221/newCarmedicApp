@@ -1,8 +1,9 @@
 import { useNavigation } from '@react-navigation/core';
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore"; 
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -12,26 +13,31 @@ const LoginScreen = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && user.emailVerified) {
-        navigation.replace("Home");
-      } else if (user && !user.emailVerified) {
-        alert("Please verify your email before logging in.");
+      if (user) {
+        checkVerification(user);
       }
     });
 
     return unsubscribe;
   }, []);
 
+  const checkVerification = async (user) => {
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const userData = userDoc.data();
+
+    if (user.emailVerified && userData.verified) {
+      navigation.replace("Home");
+    } else {
+      alert("Please verify your email before logging in.");
+      auth.signOut();
+    }
+  };
+
   const handleLogin = () => {
     signInWithEmailAndPassword(auth, email, password)
       .then(userCredentials => {
         const user = userCredentials.user;
-        if (user.emailVerified) {
-          console.log('Logged in with:', user.email);
-          navigation.replace("Home");
-        } else {
-          alert("Please verify your email before logging in.");
-        }
+        console.log('Logged in with:', user.email);
       })
       .catch(error => alert(error.message));
   };

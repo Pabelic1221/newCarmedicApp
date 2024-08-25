@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert } from 'react-native';
 import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
-import { collection, addDoc } from "firebase/firestore"; // Import Firestore functions
+import { doc, setDoc } from "firebase/firestore"; 
 
 const UserRegisterScreen = ({ navigation }) => {
   const [firstName, setFirstName] = useState('');
@@ -12,42 +12,37 @@ const UserRegisterScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleSignUp = async () => {
+  const handleSignUp = () => {
     if (password !== confirmPassword) {
-      alert("Passwords do not match");
+      alert("Passwords do not match!");
       return;
     }
 
-    if (!firstName || !lastName || !email || !address || !password || !confirmPassword) {
-      alert("Please fill in all fields");
-      return;
-    }
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(async (userCredentials) => {
+        const user = userCredentials.user;
 
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+        // Send verification email
+        await sendEmailVerification(user);
 
-      // Store user info in Firestore
-      await addDoc(collection(db, "users"), {
-        uid: user.uid,
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        address: address,
-        role: 'User', // or 'Shop' if needed
-        verified: false, // Initially set to false
-      });
+        // Add user to Firestore
+        await setDoc(doc(db, "users", user.uid), {
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          address: address,
+          role: "User",
+          verified: false
+        });
 
-      // Send verification email
-      await sendEmailVerification(user);
-      alert("Verification email sent. Please check your inbox.");
-
-      // Navigate back to the login screen
-      navigation.navigate("Login");
-
-    } catch (error) {
-      alert(error.message);
-    }
+        // Show alert and navigate back to LoginScreen
+        Alert.alert(
+          "Registration Successful",
+          "Verification email sent! Please verify your account before logging in.",
+          [{ text: "OK", onPress: () => navigation.replace("Login") }]
+        );
+      })
+      .catch(error => alert(error.message));
   };
 
   return (
@@ -101,7 +96,7 @@ const UserRegisterScreen = ({ navigation }) => {
           onPress={handleSignUp}
           style={styles.button}
         >
-          <Text style={styles.buttonText}>Register</Text>
+          <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
