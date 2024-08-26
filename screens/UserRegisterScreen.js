@@ -11,11 +11,7 @@ const UserRegisterScreen = ({ navigation }) => {
   const [address, setAddress] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
-  React.useLayoutEffect(() => {
-    navigation.setOptions({ headerShown: false });
-  }, [navigation]);
-
+  
   const handleSignUp = () => {
     if (password !== confirmPassword) {
       alert("Passwords do not match!");
