@@ -53,7 +53,7 @@ const LoginScreen = () => {
   };
 
   const handleSignUpNavigation = () => {
-    navigation.navigate("UserRegister");
+    navigation.navigate("Register");
   };
 
   return (
@@ -61,12 +61,15 @@ const LoginScreen = () => {
       style={styles.container}
       behavior="padding"
     >
+      <Text style={styles.title}>Login</Text>
       <View style={styles.inputContainer}>
         <TextInput
           placeholder="Email"
           value={email}
           onChangeText={text => setEmail(text)}
           style={styles.input}
+          keyboardType="email-address"
+          autoCapitalize="none"
         />
         <TextInput
           placeholder="Password"
@@ -102,31 +105,39 @@ export default LoginScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  title: {
+    fontSize: 24,
+    marginBottom: 20,
+  },
   inputContainer: {
-    width: '80%',
+    width: '100%',
   },
   input: {
+    width: '100%',
     backgroundColor: 'white',
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
     marginTop: 5,
   },
   buttonContainer: {
-    width: '60%',
+    width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 40,
   },
   button: {
     backgroundColor: '#0782F9',
-    width: '100%',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
+    width: '100%',
   },
   buttonText: {
     color: 'white',
