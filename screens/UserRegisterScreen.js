@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert } from 'react-native';
 import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore"; 
+import { doc, setDoc } from "firebase/firestore";
 
 const UserRegisterScreen = ({ navigation }) => {
   const [firstName, setFirstName] = useState('');
@@ -11,6 +11,10 @@ const UserRegisterScreen = ({ navigation }) => {
   const [address, setAddress] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  React.useLayoutEffect(() => {
+    navigation.setOptions({ headerShown: false });
+  }, [navigation]);
 
   const handleSignUp = () => {
     if (password !== confirmPassword) {
@@ -45,60 +49,76 @@ const UserRegisterScreen = ({ navigation }) => {
       .catch(error => alert(error.message));
   };
 
+  const goBack = () => {
+    navigation.goBack();
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior="padding"
     >
-      <View style={styles.inputContainer}>
-        <TextInput
-          placeholder="First Name"
-          value={firstName}
-          onChangeText={text => setFirstName(text)}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Last Name"
-          value={lastName}
-          onChangeText={text => setLastName(text)}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Email"
-          value={email}
-          onChangeText={text => setEmail(text)}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Address"
-          value={address}
-          onChangeText={text => setAddress(text)}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Password"
-          value={password}
-          onChangeText={text => setPassword(text)}
-          style={styles.input}
-          secureTextEntry
-        />
-        <TextInput
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChangeText={text => setConfirmPassword(text)}
-          style={styles.input}
-          secureTextEntry
-        />
+      <View style={styles.appBar}>
+        <TouchableOpacity onPress={goBack} style={styles.backButton}>
+          <Text style={styles.backText}>{'<'}</Text>
+        </TouchableOpacity>
+        <Text style={styles.appBarTitle}>Register Vehicle Owner</Text>
       </View>
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          onPress={handleSignUp}
-          style={styles.button}
-        >
-          <Text style={styles.buttonText}>Sign Up</Text>
+      <View style={styles.uploadContainer}>
+        <Text style={styles.uploadLabel}>Profile Image</Text>
+        <TouchableOpacity style={styles.uploadButton}>
+          <Text style={styles.uploadButtonText}>Choose File</Text>
+          <Text style={styles.noFileText}>No File chosen</Text>
         </TouchableOpacity>
       </View>
+
+      <TextInput
+        style={styles.input}
+        value={firstName}
+        onChangeText={setFirstName}
+        placeholder="First Name"
+      />
+      <TextInput
+        style={styles.input}
+        value={lastName}
+        onChangeText={setLastName}
+        placeholder="Last Name"
+      />
+      <TextInput
+        style={styles.input}
+        value={email}
+        onChangeText={setEmail}
+        placeholder="Email"
+        autoCapitalize="none"
+      />
+      <TextInput
+        style={styles.input}
+        value={address}
+        onChangeText={setAddress}
+        placeholder="Address"
+      />
+      <TextInput
+        style={styles.input}
+        value={password}
+        onChangeText={setPassword}
+        placeholder="Password"
+        secureTextEntry
+      />
+      <TextInput
+        style={styles.input}
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+        placeholder="Confirm Password"
+        secureTextEntry
+      />
+
+      <TouchableOpacity style={styles.registerButton} onPress={handleSignUp}>
+        <Text style={styles.registerButtonText}>Register</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={goBack}>
+        <Text style={styles.signInText}>Already have an account? Sign in</Text>
+      </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 };
@@ -108,35 +128,79 @@ export default UserRegisterScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 20,
+    backgroundColor: '#f8f8f8',
+  },
+  appBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    backgroundColor: '#f8f8f8',
+    marginBottom: 20,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 10,
+  },
+  backText: {
+    fontSize: 18,
+    color: '#000',
+  },
+  appBarTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  uploadContainer: {
+    marginBottom: 20,
     alignItems: 'center',
   },
-  inputContainer: {
-    width: '80%',
+  uploadLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  uploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  uploadButtonText: {
+    color: '#000',
+    marginRight: 10,
+  },
+  noFileText: {
+    color: '#777',
   },
   input: {
-    backgroundColor: 'white',
+    height: 50,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
     paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 10,
-    marginTop: 5,
+    marginVertical: 10,
+    backgroundColor: '#fff',
   },
-  buttonContainer: {
-    width: '60%',
+  registerButton: {
+    height: 50,
+    backgroundColor: '#000',
+    borderRadius: 5,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 40,
+    marginVertical: 20,
   },
-  button: {
-    backgroundColor: '#0782F9',
-    width: '100%',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
+  registerButtonText: {
+    color: '#fff',
+    fontSize: 18,
   },
-  buttonText: {
-    color: 'white',
-    fontWeight: '700',
-    fontSize: 16,
+  signInText: {
+    color: '#777',
+    textAlign: 'center',
   },
 });
