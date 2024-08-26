@@ -53,7 +53,7 @@ const LoginScreen = () => {
   };
 
   const handleSignUpNavigation = () => {
-    navigation.navigate("UserRegister");
+    navigation.navigate("Register");
   };
 
   return (
