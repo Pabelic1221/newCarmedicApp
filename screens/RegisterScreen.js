@@ -16,7 +16,7 @@ const RegisterScreen = ({ navigation }) => {
       {/* Register as Vehicle Owner Button */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate('UserRegistration')}
+        onPress={() => navigation.navigate('UserRegister')}
       >
         <Text style={styles.buttonText}>Register as a Vehicle Owner</Text>
       </TouchableOpacity>
@@ -31,24 +31,22 @@ const RegisterScreen = ({ navigation }) => {
 
       {/* Sign In Text */}
       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.signInText}>Dont have an Account? Sign In</Text>
+        <Text style={styles.signInText}>Already Have An Account? Sign In</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F0F0F0', // Light grey background
   },
   icon: {
-    width: 400, // Adjust to your needs
-    height: 400, // Adjust to your needs
-    marginBottom: 20,
+    width: 200, // Adjust to your needs
+    height: 250, // Adjust to your needs
+    marginTop: 100,
     borderRadius: 5
   },
   registerText: {
