@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/core';
 import React, { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
+import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore"; 
@@ -8,7 +8,6 @@ import { doc, getDoc } from "firebase/firestore";
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
   const navigation = useNavigation();
 
@@ -29,22 +28,18 @@ const LoginScreen = () => {
     if (user.emailVerified && userData.verified) {
       navigation.replace("Home");
     } else {
-      Alert.alert("Please verify your email before logging in.");
+      alert("Please verify your email before logging in.");
       auth.signOut();
     }
   };
 
-  const handleLogin = async () => {
-    setIsLoading(true);
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      console.log('Logged in with:', email);
-    } catch (error) {
-      console.error('Error during login', error);
-      Alert.alert('Login Error', error.message);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleLogin = () => {
+    signInWithEmailAndPassword(auth, email, password)
+      .then(userCredentials => {
+        const user = userCredentials.user;
+        console.log('Logged in with:', user.email);
+      })
+      .catch(error => alert(error.message));
   };
 
   const handleSignUpNavigation = () => {
@@ -52,7 +47,10 @@ const LoginScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior="padding">
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior="padding"
+    >
       <Text style={styles.title}>Login</Text>
       <View style={styles.inputContainer}>
         <TextInput
@@ -71,16 +69,21 @@ const LoginScreen = () => {
           secureTextEntry
         />
       </View>
+
       <View style={styles.buttonContainer}>
-        {isLoading ? (
-          <ActivityIndicator size="large" color="#3498db" />
-        ) : (
-          <TouchableOpacity onPress={handleLogin} style={styles.button}>
-            <Text style={styles.buttonText}>Login</Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity onPress={handleSignUpNavigation} style={styles.signUpTextContainer}>
-          <Text style={styles.signUpText}>Don't have an account? Sign up</Text>
+        <TouchableOpacity
+          onPress={handleLogin}
+          style={styles.button}
+        >
+          <Text style={styles.buttonText}>Login</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleSignUpNavigation}
+          style={styles.signUpTextContainer}
+        >
+          <Text style={styles.signUpText}>
+            Don't have an account? Sign up
+          </Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
