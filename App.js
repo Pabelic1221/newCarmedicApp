@@ -7,6 +7,7 @@ import LoginScreen from './screens/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
 import UserRegisterScreen from './screens/UserRegisterScreen';
 import RegisterScreen from './screens/RegisterScreen';
+import ShopRegisterScreen from './screens/ShopRegisterScreen'; // Import the ShopRegisterScreen
 
 const Stack = createNativeStackNavigator();
 
@@ -14,9 +15,9 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-      screenOptions={{
-        headerShown: false,  // Hide the header for all screens
-      }}>
+        screenOptions={{
+          headerShown: false,  // Hide the header for all screens
+        }}>
         <Stack.Screen 
           options={{ headerShown: false }} 
           name="Login" 
@@ -27,12 +28,16 @@ export default function App() {
           component={HomeScreen} 
         />
         <Stack.Screen 
-          name="Register"  // Add the RegisterScreen
+          name="Register"  
           component={RegisterScreen} 
         />
         <Stack.Screen 
-          name="UserRegister"  // Add the registration screen
+          name="UserRegister"  
           component={UserRegisterScreen} 
+        />
+        <Stack.Screen 
+          name="ShopRegister"  // Add the ShopRegisterScreen
+          component={ShopRegisterScreen} 
         />
       </Stack.Navigator>
     </NavigationContainer>

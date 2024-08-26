@@ -24,7 +24,7 @@ const RegisterScreen = ({ navigation }) => {
       {/* Register as Auto Repair Shop Button */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate('ShopRegistration')}
+        onPress={() => navigation.navigate('ShopRegister')}
       >
         <Text style={styles.buttonText}>Register as an Auto Repair Shop</Text>
       </TouchableOpacity>
