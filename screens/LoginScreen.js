@@ -1,9 +1,9 @@
 import { useNavigation } from '@react-navigation/core';
 import React, { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert } from 'react-native';
 import { auth, db } from '../firebase';
-import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore"; 
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -13,33 +13,43 @@ const LoginScreen = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        checkVerification(user);
+      if (user && !user.emailVerified) {
+        // If the user is registered but not verified, sign them out
+        signOut(auth);
+        Alert.alert("Email not verified", "Please verify your email before logging in.");
+      } else if (user && user.emailVerified) {
+        navigation.replace("Home");
       }
     });
 
     return unsubscribe;
   }, []);
 
-  const checkVerification = async (user) => {
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    const userData = userDoc.data();
+  const handleLogin = async () => {
+    try {
+      const userCredentials = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredentials.user;
 
-    if (user.emailVerified && userData.verified) {
-      navigation.replace("Home");
-    } else {
-      alert("Please verify your email before logging in.");
-      auth.signOut();
-    }
-  };
+      // Check if email is verified
+      if (user.emailVerified) {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
 
-  const handleLogin = () => {
-    signInWithEmailAndPassword(auth, email, password)
-      .then(userCredentials => {
-        const user = userCredentials.user;
+        if (userDoc.exists() && userDoc.data().verified === false) {
+          // Update Firestore to set verified to true
+          await updateDoc(userDocRef, { verified: true });
+        }
+
         console.log('Logged in with:', user.email);
-      })
-      .catch(error => alert(error.message));
+        navigation.replace("Home");
+
+      } else {
+        Alert.alert("Email not verified", "Please verify your email before logging in.");
+        signOut(auth); // Sign out the user if not verified
+      }
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   const handleSignUpNavigation = () => {
