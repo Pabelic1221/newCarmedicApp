@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, Vi
 import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const UserRegisterScreen = ({ navigation }) => {
   const [firstName, setFirstName] = useState('');
@@ -56,7 +57,7 @@ const UserRegisterScreen = ({ navigation }) => {
     >
       <View style={styles.appBar}>
         <TouchableOpacity onPress={goBack} style={styles.backButton}>
-          <Text style={styles.backText}>{'<'}</Text>
+        <Icon name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.appBarTitle}>Register Vehicle Owner</Text>
       </View>
