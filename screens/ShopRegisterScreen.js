@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert } from 'react-native';
 import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore"; 
+import { doc, setDoc } from "firebase/firestore";
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const ShopRegisterScreen = ({ navigation }) => {
   const [shopName, setShopName] = useState('');
@@ -35,7 +36,7 @@ const ShopRegisterScreen = ({ navigation }) => {
 
         // Alert and navigate back to login
         Alert.alert(
-          "Success!",
+          "Registration Successful",
           "Verification email sent! Please verify your account before logging in.",
           [{ text: "OK", onPress: () => navigation.replace("Login") }]
         );
@@ -43,54 +44,64 @@ const ShopRegisterScreen = ({ navigation }) => {
       .catch(error => alert(error.message));
   };
 
+  const goBack = () => {
+    navigation.goBack();
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior="padding"
     >
+      <View style={styles.appBar}>
+        <TouchableOpacity onPress={goBack} style={styles.backButton}>
+          <Icon name="arrow-back" size={24} color="#000" />
+        </TouchableOpacity>
+        <Text style={styles.appBarTitle}>Register Auto Repair Shop</Text>
+      </View>
+
       <View style={styles.inputContainer}>
         <TextInput
-          placeholder="Shop Name"
+          style={styles.input}
           value={shopName}
-          onChangeText={text => setShopName(text)}
-          style={styles.input}
+          onChangeText={setShopName}
+          placeholder="Shop Name"
         />
         <TextInput
-          placeholder="Email"
+          style={styles.input}
           value={email}
-          onChangeText={text => setEmail(text)}
-          style={styles.input}
+          onChangeText={setEmail}
+          placeholder="Email"
+          autoCapitalize="none"
         />
         <TextInput
-          placeholder="Address"
+          style={styles.input}
           value={address}
-          onChangeText={text => setAddress(text)}
-          style={styles.input}
+          onChangeText={setAddress}
+          placeholder="Address"
         />
         <TextInput
-          placeholder="Password"
-          value={password}
-          onChangeText={text => setPassword(text)}
           style={styles.input}
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Password"
           secureTextEntry
         />
         <TextInput
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChangeText={text => setConfirmPassword(text)}
           style={styles.input}
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          placeholder="Confirm Password"
           secureTextEntry
         />
       </View>
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          onPress={handleSignUp}
-          style={styles.button}
-        >
-          <Text style={styles.buttonText}>Sign Up</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={styles.registerButton} onPress={handleSignUp}>
+        <Text style={styles.registerButtonText}>Register</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={goBack}>
+        <Text style={styles.signInText}>Already have an account? Sign in</Text>
+      </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 };
@@ -100,35 +111,55 @@ export default ShopRegisterScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: '#f8f8f8',
+  },
+  appBar: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    backgroundColor: '#f8f8f8',
+    marginBottom: 20,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 10,
+  },
+  appBarTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
   },
   inputContainer: {
-    width: '80%',
+    marginTop: 60,
+    width: '100%',
+    marginBottom: 20,
   },
   input: {
-    backgroundColor: 'white',
+    height: 50,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
     paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 10,
-    marginTop: 5,
+    marginVertical: 10,
+    backgroundColor: '#fff',
   },
-  buttonContainer: {
-    width: '60%',
+  registerButton: {
+    height: 50,
+    backgroundColor: '#000',
+    borderRadius: 5,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 40,
+    marginVertical: 20,
   },
-  button: {
-    backgroundColor: '#0782F9',
-    width: '100%',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
+  registerButtonText: {
+    color: '#fff',
+    fontSize: 18,
   },
-  buttonText: {
-    color: 'white',
-    fontWeight: '700',
-    fontSize: 16,
+  signInText: {
+    color: '#777',
+    textAlign: 'center',
   },
 });

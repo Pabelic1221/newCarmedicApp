@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/core';
 import React, { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert } from 'react-native';
+import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
@@ -14,7 +14,6 @@ const LoginScreen = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user && !user.emailVerified) {
-        // If the user is registered but not verified, sign them out
         signOut(auth);
         Alert.alert("Email not verified", "Please verify your email before logging in.");
       } else if (user && user.emailVerified) {
@@ -30,13 +29,11 @@ const LoginScreen = () => {
       const userCredentials = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredentials.user;
 
-      // Check if email is verified
       if (user.emailVerified) {
         const userDocRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userDocRef);
 
         if (userDoc.exists() && userDoc.data().verified === false) {
-          // Update Firestore to set verified to true
           await updateDoc(userDocRef, { verified: true });
         }
 
@@ -45,7 +42,7 @@ const LoginScreen = () => {
 
       } else {
         Alert.alert("Email not verified", "Please verify your email before logging in.");
-        signOut(auth); // Sign out the user if not verified
+        signOut(auth);
       }
     } catch (error) {
       alert(error.message);
@@ -61,7 +58,11 @@ const LoginScreen = () => {
       style={styles.container}
       behavior="padding"
     >
-      <Text style={styles.title}>Login</Text>
+      <Image
+        source={require('../assets/AutoRepairTransparent.png')}
+        style={styles.image}
+      />
+      <Text style={styles.title}>Sign In</Text>
       <View style={styles.inputContainer}>
         <TextInput
           placeholder="Email"
@@ -92,7 +93,7 @@ const LoginScreen = () => {
           style={styles.signUpTextContainer}
         >
           <Text style={styles.signUpText}>
-            Don't have an account? Sign up
+            Don't have an account? Sign Up
           </Text>
         </TouchableOpacity>
       </View>
@@ -108,10 +109,18 @@ const styles = StyleSheet.create({
     padding: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#F7F7F7',
+  },
+  image: {
+    width: 200,
+    height: 100,
+    marginBottom: 30,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
+    fontWeight: 'bold',
     marginBottom: 20,
+    color: '#000',
   },
   inputContainer: {
     width: '100%',
@@ -133,7 +142,7 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   button: {
-    backgroundColor: '#0782F9',
+    backgroundColor: '#000',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
@@ -148,7 +157,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   signUpText: {
-    color: '#0782F9',
+    color: '#000',
     fontWeight: '700',
     fontSize: 16,
   },
