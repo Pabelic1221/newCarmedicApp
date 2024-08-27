@@ -18,9 +18,38 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
       <Text>Email: {auth.currentUser?.email}</Text>
+
+      <TouchableOpacity
+        onPress={() => navigation.navigate('RequestService')}
+        style={styles.button}
+      >
+        <Text style={styles.buttonText}>Request Service</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => navigation.navigate('ShopList')}
+        style={styles.button}
+      >
+        <Text style={styles.buttonText}>Auto Repair Shops</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => navigation.navigate('Reviews')}
+        style={styles.button}
+      >
+        <Text style={styles.buttonText}>Reviews</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => navigation.navigate('Feedback')}
+        style={styles.button}
+      >
+        <Text style={styles.buttonText}>Feedback</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity
         onPress={handleSignOut}
-        style={styles.button}
+        style={[styles.button, { backgroundColor: 'red' }]}
       >
         <Text style={styles.buttonText}>Sign out</Text>
       </TouchableOpacity>
@@ -42,7 +71,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
-    marginTop: 40,
+    marginTop: 20,
   },
   buttonText: {
     color: 'white',
