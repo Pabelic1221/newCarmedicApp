@@ -124,11 +124,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   backButton: {
-    // Adjust the margin or padding to create more space
-    paddingHorizontal: 10,
+    position: 'absolute',
+    left: 10,
   },
   appBarTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#000',
   },
