@@ -1,81 +1,72 @@
-import { useNavigation } from '@react-navigation/core';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { auth } from '../firebase';
-import { signOut } from "firebase/auth";
+import { StyleSheet, Text, TouchableOpacity, View, SafeAreaView } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import AppBar from './AppBar'; // Import AppBar component
 
 const HomeScreen = () => {
-  const navigation = useNavigation();
-
-  const handleSignOut = () => {
-    signOut(auth)
-      .then(() => {
-        navigation.replace("Login");
-      })
-      .catch(error => alert(error.message));
-  };
-
   return (
-    <View style={styles.container}>
-      <Text>Email: {auth.currentUser?.email}</Text>
-
-      <TouchableOpacity
-        onPress={() => navigation.navigate('RequestService')}
-        style={styles.button}
-      >
-        <Text style={styles.buttonText}>Request Service</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => navigation.navigate('ShopList')}
-        style={styles.button}
-      >
-        <Text style={styles.buttonText}>Auto Repair Shops</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => navigation.navigate('Reviews')}
-        style={styles.button}
-      >
-        <Text style={styles.buttonText}>Reviews</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => navigation.navigate('Feedback')}
-        style={styles.button}
-      >
-        <Text style={styles.buttonText}>Feedback</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={handleSignOut}
-        style={[styles.button, { backgroundColor: 'red' }]}
-      >
-        <Text style={styles.buttonText}>Sign out</Text>
-      </TouchableOpacity>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <AppBar />
+      <View style={styles.content}>
+        <Ionicons name="car-sport" size={100} color="#D9534F" />
+        <View style={styles.grid}>
+          <TouchableOpacity style={styles.gridItem}>
+            <Text style={styles.gridTitle}>Request</Text>
+            <Text style={styles.gridSubtitle}>Request a Service</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.gridItem}>
+            <Text style={styles.gridTitle}>Auto Repair Shops</Text>
+            <Text style={styles.gridSubtitle}>Browse and compare repair shops</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.gridItem}>
+            <Text style={styles.gridTitle}>Reviews</Text>
+            <Text style={styles.gridSubtitle}>Read and Write reviews</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.gridItem}>
+            <Text style={styles.gridTitle}>Feedback</Text>
+            <Text style={styles.gridSubtitle}>Submit feedback about the app</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 };
-
-export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f2f2f2',
+  },
+  content: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  button: {
-    backgroundColor: '#0782F9',
-    width: '60%',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
+  grid: {
     marginTop: 20,
+    width: '100%',
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
   },
-  buttonText: {
-    color: 'white',
-    fontWeight: '700',
-    fontSize: 16,
+  gridItem: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    width: '45%',
+    marginVertical: 10,
+    elevation: 2,
+  },
+  gridTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  gridSubtitle: {
+    fontSize: 14,
+    color: '#666',
   },
 });
+
+export default HomeScreen;

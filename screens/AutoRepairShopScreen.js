@@ -2,18 +2,16 @@ import React from 'react';
 import { StyleSheet, Text, View, SafeAreaView } from 'react-native';
 import AppBar from './AppBar'; // Import AppBar component
 
-const FeedbackScreen = () => {
+const AutoRepairShopsScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <AppBar/>
       <View style={styles.content}>
-        < Text>Welcome to Feedback Screen</Text>
+        < Text>Welcome to Auto Repair Shop Screen</Text>
       </View>
     </SafeAreaView>
   );
 };
-
-export default FeedbackScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -26,3 +24,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
+export default AutoRepairShopsScreen;
