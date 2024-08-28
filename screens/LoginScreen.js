@@ -17,7 +17,7 @@ const LoginScreen = () => {
         signOut(auth);
         Alert.alert("Email not verified", "Please verify your email before logging in.");
       } else if (user && user.emailVerified) {
-        navigation.replace("Home");
+        navigation.replace("DrawerNavigator"); // Correct navigation target
       }
     });
 
@@ -38,7 +38,7 @@ const LoginScreen = () => {
         }
 
         console.log('Logged in with:', user.email);
-        navigation.replace("Home");
+        navigation.replace("DrawerNavigator"); // Correct navigation target
 
       } else {
         Alert.alert("Email not verified", "Please verify your email before logging in.");

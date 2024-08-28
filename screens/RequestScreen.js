@@ -2,18 +2,18 @@ import React from 'react';
 import { StyleSheet, Text, View, SafeAreaView } from 'react-native';
 import AppBar from './AppBar'; // Import AppBar component
 
-const FeedbackScreen = () => {
+const RequestScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <AppBar/>
       <View style={styles.content}>
-        < Text>Welcome to Feedback Screen</Text>
+        < Text>Welcome to Request Screen</Text>
       </View>
     </SafeAreaView>
   );
 };
 
-export default FeedbackScreen;
+export default RequestScreen;
 
 const styles = StyleSheet.create({
   container: {

@@ -1,17 +1,13 @@
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from './screens/LoginScreen';
-import HomeScreen from './screens/HomeScreen';
+import DrawerNavigator from './DrawerNavigator';
 import UserRegisterScreen from './screens/UserRegisterScreen';
 import RegisterScreen from './screens/RegisterScreen';
-import ShopRegisterScreen from './screens/ShopRegisterScreen';
-import RequestServiceScreen from './screens/RequestServiceScreen';
-import ShopListScreen from './screens/ShopListScreen';
-import ReviewsScreen from './screens/ReviewsScreen';
-import FeedbackScreen from './screens/FeedbackScreen';
+import ShopRegisterScreen from './screens/ShopRegisterScreen'; 
 
 const Stack = createNativeStackNavigator();
 
@@ -20,16 +16,16 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          headerShown: false,  
-        }}>
+          headerShown: false, // Ensure headers are hidden here
+        }}
+      >
         <Stack.Screen 
-          options={{ headerShown: false }} 
           name="Login" 
           component={LoginScreen} 
         />
         <Stack.Screen 
-          name="Home" 
-          component={HomeScreen} 
+          name="DrawerNavigator" 
+          component={DrawerNavigator} 
         />
         <Stack.Screen 
           name="Register"  
@@ -42,22 +38,6 @@ export default function App() {
         <Stack.Screen 
           name="ShopRegister"  
           component={ShopRegisterScreen} 
-        />
-        <Stack.Screen 
-          name="RequestService"  
-          component={RequestServiceScreen} 
-        />
-        <Stack.Screen 
-          name="ShopList"  
-          component={ShopListScreen} 
-        />
-        <Stack.Screen 
-          name="Reviews"  
-          component={ReviewsScreen} 
-        />
-        <Stack.Screen 
-          name="Feedback"  
-          component={FeedbackScreen} 
         />
       </Stack.Navigator>
     </NavigationContainer>
