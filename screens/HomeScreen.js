@@ -1,28 +1,43 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, SafeAreaView } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation
 import AppBar from './AppBar'; // Import AppBar component
 
 const HomeScreen = () => {
+  const navigation = useNavigation(); // Initialize navigation
+
   return (
     <SafeAreaView style={styles.container}>
       <AppBar />
       <View style={styles.content}>
         <Ionicons name="car-sport" size={100} color="#D9534F" />
         <View style={styles.grid}>
-          <TouchableOpacity style={styles.gridItem}>
+          <TouchableOpacity
+            style={styles.gridItem}
+            onPress={() => navigation.navigate('RequestService')} // Navigate to RequestServiceScreen
+          >
             <Text style={styles.gridTitle}>Request</Text>
             <Text style={styles.gridSubtitle}>Request a Service</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.gridItem}>
+          <TouchableOpacity
+            style={styles.gridItem}
+            onPress={() => navigation.navigate('ShopList')} // Navigate to ShopListScreen
+          >
             <Text style={styles.gridTitle}>Auto Repair Shops</Text>
             <Text style={styles.gridSubtitle}>Browse and compare repair shops</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.gridItem}>
+          <TouchableOpacity
+            style={styles.gridItem}
+            onPress={() => navigation.navigate('Reviews')} // Navigate to ReviewsScreen
+          >
             <Text style={styles.gridTitle}>Reviews</Text>
             <Text style={styles.gridSubtitle}>Read and Write reviews</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.gridItem}>
+          <TouchableOpacity
+            style={styles.gridItem}
+            onPress={() => navigation.navigate('Feedback')} // Navigate to FeedbackScreen
+          >
             <Text style={styles.gridTitle}>Feedback</Text>
             <Text style={styles.gridSubtitle}>Submit feedback about the app</Text>
           </TouchableOpacity>
