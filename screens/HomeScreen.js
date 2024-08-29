@@ -15,14 +15,14 @@ const HomeScreen = () => {
         <View style={styles.grid}>
           <TouchableOpacity
             style={styles.gridItem}
-            onPress={() => navigation.navigate('RequestService')} // Navigate to RequestServiceScreen
+            onPress={() => navigation.navigate('Request')} // Navigate to RequestScreen
           >
             <Text style={styles.gridTitle}>Request</Text>
             <Text style={styles.gridSubtitle}>Request a Service</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.gridItem}
-            onPress={() => navigation.navigate('ShopList')} // Navigate to ShopListScreen
+            onPress={() => navigation.navigate('Auto Repair Shops')} // Navigate to AutoRepairShopScreen
           >
             <Text style={styles.gridTitle}>Auto Repair Shops</Text>
             <Text style={styles.gridSubtitle}>Browse and compare repair shops</Text>
