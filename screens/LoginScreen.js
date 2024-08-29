@@ -1,14 +1,13 @@
 import { useNavigation } from '@react-navigation/core';
 import React, { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
 import { auth, db } from '../firebase';
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -17,12 +16,12 @@ const LoginScreen = () => {
         signOut(auth);
         Alert.alert("Email not verified", "Please verify your email before logging in.");
       } else if (user && user.emailVerified) {
-        navigation.replace("DrawerNavigator"); // Correct navigation target
+        navigation.replace('Main'); // Navigate to Main which includes DrawerNavigator
       }
     });
 
     return unsubscribe;
-  }, []);
+  }, [navigation]);
 
   const handleLogin = async () => {
     try {
@@ -30,7 +29,7 @@ const LoginScreen = () => {
       const user = userCredentials.user;
 
       if (user.emailVerified) {
-        const userDocRef = doc(db, "users", user.uid);
+        const userDocRef = doc(db, 'users', user.uid);
         const userDoc = await getDoc(userDocRef);
 
         if (userDoc.exists() && userDoc.data().verified === false) {
@@ -38,7 +37,7 @@ const LoginScreen = () => {
         }
 
         console.log('Logged in with:', user.email);
-        navigation.replace("DrawerNavigator"); // Correct navigation target
+        navigation.replace('Main'); // Navigate to Main which includes DrawerNavigator
 
       } else {
         Alert.alert("Email not verified", "Please verify your email before logging in.");
@@ -50,37 +49,35 @@ const LoginScreen = () => {
   };
 
   const handleSignUpNavigation = () => {
-    navigation.navigate("Register");
+    navigation.navigate('Register');
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior="padding"
-    >
+    <View style={styles.container}>
       <Image
         source={require('../assets/AutoRepairTransparent.png')}
         style={styles.image}
       />
       <Text style={styles.title}>Sign In</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          placeholder="Email"
-          value={email}
-          onChangeText={text => setEmail(text)}
-          style={styles.input}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        <TextInput
-          placeholder="Password"
-          value={password}
-          onChangeText={text => setPassword(text)}
-          style={styles.input}
-          secureTextEntry
-        />
+      <View style={styles.inputWrapper}>
+        <View style={styles.inputContainer}>
+          <TextInput
+            placeholder="Email"
+            value={email}
+            onChangeText={text => setEmail(text)}
+            style={styles.input}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <TextInput
+            placeholder="Password"
+            value={password}
+            onChangeText={text => setPassword(text)}
+            style={styles.input}
+            secureTextEntry
+          />
+        </View>
       </View>
-
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           onPress={handleLogin}
@@ -97,7 +94,7 @@ const LoginScreen = () => {
           </Text>
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 
@@ -106,21 +103,23 @@ export default LoginScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
     backgroundColor: '#F7F7F7',
   },
   image: {
-    width: 200,
+    width: 250,
     height: 100,
-    marginBottom: 30,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 20,
     color: '#000',
+  },
+  inputWrapper: {
+    width: '100%',
   },
   inputContainer: {
     width: '100%',

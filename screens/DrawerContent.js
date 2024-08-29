@@ -91,12 +91,12 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 20,
     alignSelf: 'center', // Center the button horizontally
-    width: '80%', // Adjust width to make it smaller
+    width: '80%', // Adjust button width
   },
   buttonText: {
     color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center', // Center the text
   },
 });
 
