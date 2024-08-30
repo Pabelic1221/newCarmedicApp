@@ -6,6 +6,7 @@ import AutoRepairShopScreen from './screens/AutoRepairShopScreen';
 import ReviewsScreen from './screens/ReviewsScreen';
 import FeedbackScreen from './screens/FeedbackScreen';
 import DrawerContent from './screens/DrawerContent';
+import { StatusBar, Platform } from 'react-native';
 
 const Drawer = createDrawerNavigator();
 
@@ -19,6 +20,7 @@ function DrawerNavigator() {
         drawerStyle: {
           width: 250,
           backgroundColor: '#fff',
+          marginTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0, // Add margin for Android
         },
         overlayColor: 'rgba(0,0,0,0.5)',
       }}

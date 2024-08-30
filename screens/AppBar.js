@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, SafeAreaView, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -23,7 +23,9 @@ const AppBar = () => {
 
 const styles = StyleSheet.create({
   safeArea: {
+    flex: 0,
     backgroundColor: '#000',
+    paddingTop: Platform.OS === 'android' ? 25 : 0, // Add padding for Android devices
   },
   appBar: {
     flexDirection: 'row',
@@ -31,7 +33,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     paddingHorizontal: 20,
-    elevation: 4, // Optional: Add elevation if needed
+    backgroundColor: '#000',
   },
   appTitle: {
     color: '#fff',
