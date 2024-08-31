@@ -1,12 +1,15 @@
 import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
+import { StatusBar, Platform } from 'react-native';
+
 import HomeScreen from './screens/HomeScreen';
 import RequestScreen from './screens/RequestScreen';
 import AutoRepairShopScreen from './screens/AutoRepairShopScreen';
 import ReviewsScreen from './screens/ReviewsScreen';
 import FeedbackScreen from './screens/FeedbackScreen';
 import DrawerContent from './screens/DrawerContent';
-import { StatusBar, Platform } from 'react-native';
+import UserProfile from './screens/UserProfile';
+
 
 const Drawer = createDrawerNavigator();
 
@@ -30,6 +33,7 @@ function DrawerNavigator() {
       <Drawer.Screen name="Auto Repair Shops" component={AutoRepairShopScreen} />
       <Drawer.Screen name="Reviews" component={ReviewsScreen} />
       <Drawer.Screen name="Feedback" component={FeedbackScreen} />
+      <Drawer.Screen name="Profile" component={UserProfile} />
     </Drawer.Navigator>
   );
 }

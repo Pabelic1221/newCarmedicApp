@@ -17,9 +17,14 @@ const DrawerContent = (props) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.userInfo}>
-        <Text style={styles.email}>{auth.currentUser?.email}</Text>
-      </View>
+      <TouchableOpacity
+        style={styles.userInfo}
+        onPress={() => navigation.navigate("UserProfile")}
+      >
+        <Text style={styles.email}>
+          {auth.currentUser?.email}
+        </Text>
+      </TouchableOpacity>
       <TouchableOpacity
         onPress={() => navigation.navigate("Home")}
         style={styles.drawerItem}
@@ -68,12 +73,12 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     marginBottom: 20,
-    alignItems: 'center', // Center userInfo horizontally
+    alignItems: 'center',
   },
   email: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#808080', // Gray color
+    color: '#808080',
   },
   drawerItem: {
     paddingVertical: 15,
@@ -82,21 +87,21 @@ const styles = StyleSheet.create({
   },
   drawerItemText: {
     fontSize: 18,
-    color: '#808080', // Gray color
-    textAlign: 'center', // Center the text
+    color: '#808080',
+    textAlign: 'center',
   },
   button: {
     padding: 10,
     backgroundColor: '#f00',
     borderRadius: 5,
     marginTop: 20,
-    alignSelf: 'center', // Center the button horizontally
-    width: '80%', // Adjust button width
+    alignSelf: 'center',
+    width: '80%',
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
-    textAlign: 'center', // Center the text
+    textAlign: 'center',
   },
 });
 

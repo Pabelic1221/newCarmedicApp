@@ -7,6 +7,7 @@ import RegisterScreen from './screens/RegisterScreen';
 import UserRegisterScreen from './screens/UserRegisterScreen';
 import ShopRegisterScreen from './screens/ShopRegisterScreen';
 import DrawerNavigator from './DrawerNavigator'; // Import DrawerNavigator for main app navigation
+import UserProfile from './screens/UserProfile'; // Import UserProfile
 
 const Stack = createNativeStackNavigator();
 
@@ -23,9 +24,12 @@ export default function App() {
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="UserRegister" component={UserRegisterScreen} />
         <Stack.Screen name="ShopRegister" component={ShopRegisterScreen} />
-        
+
         {/* Main App Navigation */}
         <Stack.Screen name="Main" component={DrawerNavigator} />
+
+        {/* User Profile Screen */}
+        <Stack.Screen name="UserProfile" component={UserProfile} />
       </Stack.Navigator>
     </NavigationContainer>
   );
