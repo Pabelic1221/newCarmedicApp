@@ -75,7 +75,7 @@ const DrawerContent = (props) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+
     padding: 20,
     backgroundColor: '#fff',
     justifyContent: 'center', // Centers items vertically
@@ -85,20 +85,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   profileImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 150,
+    height: 150,
+    borderRadius: 100,
     backgroundColor: '#ccc',
     marginBottom: 10,
   },
   email: {
     fontSize: 16,
-    fontWeight: 'bold',
     color: '#808080',
   },
   drawerItemsContainer: {
-    flex: 1, // Makes sure this container takes up the remaining space
-    justifyContent: 'center', // Centers items vertically
+    flex: 0, // Change to 1 If you Want Good Spacing
+    justifyContent: 'center',
   },
   drawerItem: {
     paddingVertical: 15,
@@ -107,7 +106,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   drawerItemText: {
-    fontSize: 18,
+    fontSize: 21,
     color: '#808080',
     textAlign: 'center',
   },
@@ -115,7 +114,7 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: '#000',
     borderRadius: 5,
-    marginTop: 30,
+    margin: 100,
     alignSelf: 'center',
     width: '80%',
   },

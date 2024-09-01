@@ -83,7 +83,9 @@ const UserProfile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: '#F7F7F7',
   },
   innerContainer: {
     flex: 1,
