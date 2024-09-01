@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, View, Text, TextInput, StyleSheet, TouchableOpacity, Platform, SafeAreaView, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { doc, updateDoc } from "firebase/firestore";
+import { reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "firebase/auth";
 
 const UserProfile = () => {
   const navigation = useNavigation();
@@ -11,6 +13,8 @@ const UserProfile = () => {
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -23,8 +27,34 @@ const UserProfile = () => {
     }
   }, []);
 
-  const handleUpdateProfile = () => {
-    // Implement update logic here
+  const handleUpdateProfile = async () => {
+    const user = auth.currentUser;
+    const userDocRef = doc(db, "users", user.uid); // Assume your users collection is named "users"
+    
+    try {
+      if (oldPassword && newPassword) {
+        const credential = EmailAuthProvider.credential(user.email, oldPassword);
+        await reauthenticateWithCredential(user, credential);
+        await updatePassword(user, newPassword);
+        await updateDoc(userDocRef, {
+          firstName,
+          lastName,
+          address,
+          phone,
+        });
+        Alert.alert('Success', 'Profile and password updated successfully.');
+      } else {
+        await updateDoc(userDocRef, {
+          firstName,
+          lastName,
+          address,
+          phone,
+        });
+        Alert.alert('Success', 'Profile updated successfully.');
+      }
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
   };
 
   return (
@@ -70,6 +100,20 @@ const UserProfile = () => {
             value={phone}
             onChangeText={setPhone}
             placeholder="Phone Number"
+          />
+          <TextInput
+            style={styles.input}
+            value={oldPassword}
+            onChangeText={setOldPassword}
+            placeholder="Old Password"
+            secureTextEntry
+          />
+          <TextInput
+            style={styles.input}
+            value={newPassword}
+            onChangeText={setNewPassword}
+            placeholder="New Password"
+            secureTextEntry
           />
           <TouchableOpacity style={styles.button} onPress={handleUpdateProfile}>
             <Text style={styles.buttonText}>Update Profile</Text>
