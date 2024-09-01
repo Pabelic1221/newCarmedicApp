@@ -22,9 +22,14 @@ const DrawerContent = (props) => {
           source={{ uri: 'https://via.placeholder.com/80' }} 
           style={styles.profileImage} 
         />
-        <Text style={styles.email}>
-          {auth.currentUser?.email}
-        </Text>
+        <TouchableOpacity
+          style={styles.userInfo}
+          onPress={() => navigation.navigate("UserProfile")}
+        >
+          <Text style={styles.email}>
+            {auth.currentUser?.email}
+          </Text>
+        </TouchableOpacity>
       </View>
       <View style={styles.drawerItemsContainer}>
         <TouchableOpacity
