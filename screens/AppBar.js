@@ -24,7 +24,6 @@ const AppBar = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 0,
-    backgroundColor: '#000',
     paddingTop: Platform.OS === 'android' ? 25 : 0, // Add padding for Android devices
   },
   appBar: {

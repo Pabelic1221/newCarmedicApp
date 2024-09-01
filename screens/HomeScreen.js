@@ -1,7 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, SafeAreaView } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import { StyleSheet, Text, TouchableOpacity, View, SafeAreaView, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import AppBar from './AppBar'; // Import AppBar component
 
 const HomeScreen = () => {
@@ -11,7 +10,12 @@ const HomeScreen = () => {
     <SafeAreaView style={styles.container}>
       <AppBar />
       <View style={styles.content}>
-        <Ionicons name="car-sport" size={100} color="#D9534F" />
+        <View style={styles.imageContainer}>
+          <Image 
+            source={require('../assets/AutoRepairTransparent.png')} 
+            style={styles.image} 
+          />
+        </View>
         <View style={styles.grid}>
           <TouchableOpacity
             style={styles.gridItem}
@@ -56,6 +60,26 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  imageContainer: {
+    width: 320, // Increased the size of the container
+    height: 200, // Increased the size of the container
+    borderRadius: 15, // Rounded corners for the box-like container
+    overflow: 'hidden', // Ensures the image stays within the container's border radius
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff', // Optional: background color for the container
+    marginBottom: 20, // Spacing below the image container
+    shadowColor: '#000', // Shadow color
+    shadowOffset: { width: 0, height: 2 }, // Offset for the shadow
+    shadowOpacity: 0.25, // Shadow opacity
+    shadowRadius: 5, // Blur radius for the shadow
+    elevation: 5, // Elevation for Android shadow
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain', // Keeps the aspect ratio of the image
   },
   grid: {
     marginTop: 20,

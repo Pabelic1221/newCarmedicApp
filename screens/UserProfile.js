@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { KeyboardAvoidingView, View, Text, TextInput, StyleSheet, TouchableOpacity, Platform, SafeAreaView, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { auth } from '../firebase';
-import { updateProfile, updatePassword } from 'firebase/auth';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const UserProfile = () => {
+  const navigation = useNavigation();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -17,8 +19,7 @@ const UserProfile = () => {
       setFirstName(nameParts[0] || '');
       setLastName(nameParts[1] || '');
       setEmail(user.email || '');
-      // Assuming you have stored address and phone in the user's Firestore document
-      // Fetch and set these values accordingly
+      // Fetch address and phone from Firestore if needed
     }
   }, []);
 
@@ -27,69 +28,110 @@ const UserProfile = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>First Name</Text>
-      <TextInput
-        style={styles.input}
-        value={firstName}
-        onChangeText={setFirstName}
-      />
-      <Text style={styles.label}>Last Name</Text>
-      <TextInput
-        style={styles.input}
-        value={lastName}
-        onChangeText={setLastName}
-      />
-      <Text style={styles.label}>Email</Text>
-      <TextInput
-        style={styles.input}
-        value={email}
-        editable={false} // Email shouldn't be editable
-      />
-      <Text style={styles.label}>Address</Text>
-      <TextInput
-        style={styles.input}
-        value={address}
-        onChangeText={setAddress}
-      />
-      <Text style={styles.label}>Phone Number</Text>
-      <TextInput
-        style={styles.input}
-        value={phone}
-        onChangeText={setPhone}
-      />
-      <TouchableOpacity style={styles.button} onPress={handleUpdateProfile}>
-        <Text style={styles.buttonText}>Update Profile</Text>
-      </TouchableOpacity>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.innerContainer}
+      >
+        <View style={styles.appBar}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Icon name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.appBarTitle}>User Profile</Text>
+        </View>
+
+        <View style={styles.formContainer}>
+          <TextInput
+            style={styles.input}
+            value={firstName}
+            onChangeText={setFirstName}
+            placeholder="First Name"
+          />
+          <TextInput
+            style={styles.input}
+            value={lastName}
+            onChangeText={setLastName}
+            placeholder="Last Name"
+          />
+          <TextInput
+            style={styles.input}
+            value={email}
+            editable={false} // Email shouldn't be editable
+            placeholder="Email"
+          />
+          <TextInput
+            style={styles.input}
+            value={address}
+            onChangeText={setAddress}
+            placeholder="Address"
+          />
+          <TextInput
+            style={styles.input}
+            value={phone}
+            onChangeText={setPhone}
+            placeholder="Phone Number"
+          />
+          <TouchableOpacity style={styles.button} onPress={handleUpdateProfile}>
+            <Text style={styles.buttonText}>Update Profile</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: 'center',
     padding: 20,
+    backgroundColor: '#F7F7F7',
   },
-  label: {
-    fontSize: 16,
-    marginBottom: 10,
+  innerContainer: {
+    flex: 1,
+    padding: 10,
+  },
+  appBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    backgroundColor: '#f8f8f8',
+    marginBottom: 20,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 10,
+  },
+  appBarTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  formContainer: {
+    flex: 1,
+    justifyContent: 'center',
   },
   input: {
-    height: 40,
+    height: 60, // Increased height
     borderColor: '#ccc',
     borderWidth: 1,
-    marginBottom: 20,
-    paddingHorizontal: 10,
+    borderRadius: 5,
+    paddingHorizontal: 15,
+    marginVertical: 10,
+    backgroundColor: '#fff',
   },
   button: {
-    backgroundColor: '#007bff',
-    padding: 15,
+    height: 60, // Increased height to match input fields
+    backgroundColor: '#000',
     borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 20,
   },
   buttonText: {
     color: '#fff',
-    textAlign: 'center',
-    fontSize: 16,
+    fontSize: 18,
   },
 });
 
