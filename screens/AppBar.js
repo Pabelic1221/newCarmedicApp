@@ -1,7 +1,15 @@
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, SafeAreaView, Platform } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import React from "react";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  SafeAreaView,
+  Platform,
+  ScrollView,
+} from "react-native";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import { useNavigation } from "@react-navigation/native";
 
 const AppBar = () => {
   const navigation = useNavigation();
@@ -13,7 +21,11 @@ const AppBar = () => {
           <Ionicons name="menu" size={30} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.appTitle}>CarMedic</Text>
-        <TouchableOpacity onPress={() => { /* Add Search Functionality */ }}>
+        <TouchableOpacity
+          onPress={() => {
+            /* Add Search Functionality */
+          }}
+        >
           <Ionicons name="search" size={30} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -21,24 +33,52 @@ const AppBar = () => {
   );
 };
 
+const App = () => {
+  return (
+    <View style={styles.container}>
+      <AppBar />
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        {/* Your scrollable content goes here */}
+        <Text style={styles.content}>Content goes here...</Text>
+      </ScrollView>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 0,
-    paddingTop: Platform.OS === 'android' ? 25 : 0, // Add padding for Android devices
+    backgroundColor: "#000",
+    zIndex: 1, // Ensure the app bar stays on top of other content
   },
   appBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    position: "absolute", // Positioning the app bar at the top
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
   },
   appTitle: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
+  },
+  container: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    paddingTop: Platform.OS === "android" ? 75 : 100, // Add padding to avoid content overlap
+    paddingHorizontal: 20,
+  },
+  content: {
+    fontSize: 18,
+    color: "#333",
+    marginBottom: 20,
   },
 });
 
-export default AppBar;
+export default App;
