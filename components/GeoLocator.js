@@ -36,7 +36,7 @@ export default function GeoLocator({ children }) {
         subscription.remove();
       }
     };
-  }, []);
+  }, [dispatch]);
   return children;
 }
 GeoLocator.propTypes = {

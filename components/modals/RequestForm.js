@@ -5,17 +5,22 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
+  Alert,
 } from "react-native";
+
+import Icon from "react-native-vector-icons/Ionicons";
 import RNPickerSelect from "react-native-picker-select";
 import { auth, db } from "../../firebase";
 import { collection, addDoc } from "firebase/firestore";
-
+import { useSelector } from "react-redux";
 export default function RequestForm({ shop, onClose }) {
   const [problem, setProblem] = useState("");
   const [carBrand, setCarBrand] = useState("");
   const [carModel, setCarModel] = useState("");
   const [description, setDescription] = useState("");
-
+  const { longitude, latitude } = useSelector(
+    (state) => state.userLocation.currentLocation
+  );
   const handleSubmit = async () => {
     const userId = auth.currentUser?.uid;
 
@@ -36,19 +41,24 @@ export default function RequestForm({ shop, onClose }) {
         carBrand,
         carModel,
         description,
-        state: "unverified",
+        state: "pending",
+        longitude,
+        latitude,
         timestamp: new Date().toISOString(),
       });
 
-      console.log("Request submitted successfully!");
-      onClose(); // Close the modal after successful submission
+      Alert.alert("Request submitted successfully!");
+      onClose();
     } catch (error) {
-      console.error("Error submitting request: ", error);
+      Alert.alert("Error submitting request: ", error);
     }
   };
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+        <Icon name="close" size={24} color="#000" />
+      </TouchableOpacity>
       <Text style={styles.title}>Request</Text>
 
       <Text style={styles.label}>Select Specific Problem</Text>
@@ -99,6 +109,12 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#fff",
   },
+  closeButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+  },
+
   title: {
     fontSize: 24,
     fontWeight: "bold",

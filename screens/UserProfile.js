@@ -1,39 +1,60 @@
-import React, { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, View, Text, TextInput, StyleSheet, TouchableOpacity, Platform, SafeAreaView, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { auth, db } from '../firebase';
-import Icon from 'react-native-vector-icons/Ionicons';
+import React, { useEffect, useState } from "react";
+import {
+  KeyboardAvoidingView,
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+  SafeAreaView,
+  Alert,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { auth, db } from "../firebase";
+import Icon from "react-native-vector-icons/Ionicons";
 import { doc, updateDoc } from "firebase/firestore";
-import { reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "firebase/auth";
-
+import {
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  updatePassword,
+} from "firebase/auth";
+import { useSelector } from "react-redux";
+import { getAddressFromCoordinates } from "../helpers/maps/getAddress";
 const UserProfile = () => {
   const navigation = useNavigation();
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [address, setAddress] = useState('');
-  const [phone, setPhone] = useState('');
-  const [oldPassword, setOldPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const currentUser = useSelector((state) => state.user.currentUser);
+  const { longitude, latitude } = useSelector(
+    (state) => state.userLocation.currentLocation
+  );
 
   useEffect(() => {
     const user = auth.currentUser;
-    if (user) {
-      const nameParts = user.displayName ? user.displayName.split(' ') : ['', ''];
-      setFirstName(nameParts[0] || '');
-      setLastName(nameParts[1] || '');
-      setEmail(user.email || '');
-      // Fetch address and phone from Firestore if needed
+    if (user && currentUser.role === "User") {
+      setFirstName(currentUser.firstName);
+      setLastName(currentUser.lastName);
+      setEmail(currentUser.email);
+      setAddress(currentUser.address);
     }
   }, []);
 
   const handleUpdateProfile = async () => {
     const user = auth.currentUser;
     const userDocRef = doc(db, "users", user.uid); // Assume your users collection is named "users"
-    
+
     try {
       if (oldPassword && newPassword) {
-        const credential = EmailAuthProvider.credential(user.email, oldPassword);
+        const credential = EmailAuthProvider.credential(
+          user.email,
+          oldPassword
+        );
         await reauthenticateWithCredential(user, credential);
         await updatePassword(user, newPassword);
         await updateDoc(userDocRef, {
@@ -42,7 +63,7 @@ const UserProfile = () => {
           address,
           phone,
         });
-        Alert.alert('Success', 'Profile and password updated successfully.');
+        Alert.alert("Success", "Profile and password updated successfully.");
       } else {
         await updateDoc(userDocRef, {
           firstName,
@@ -50,21 +71,24 @@ const UserProfile = () => {
           address,
           phone,
         });
-        Alert.alert('Success', 'Profile updated successfully.');
+        Alert.alert("Success", "Profile updated successfully.");
       }
     } catch (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert("Error", error.message);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.innerContainer}
       >
         <View style={styles.appBar}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
             <Icon name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
           <Text style={styles.appBarTitle}>User Profile</Text>
@@ -93,6 +117,7 @@ const UserProfile = () => {
             style={styles.input}
             value={address}
             onChangeText={setAddress}
+            onFocus={setAddress(getAddressFromCoordinates(latitude, longitude))}
             placeholder="Address"
           />
           <TextInput
@@ -127,54 +152,54 @@ const UserProfile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 20,
-    backgroundColor: '#F7F7F7',
+    backgroundColor: "#F7F7F7",
   },
   innerContainer: {
     flex: 1,
     padding: 10,
   },
   appBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 10,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: "#f8f8f8",
     marginBottom: 20,
   },
   backButton: {
-    position: 'absolute',
+    position: "absolute",
     left: 10,
   },
   appBarTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: "bold",
+    color: "#000",
   },
   formContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   input: {
     height: 60, // Increased height
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 15,
     marginVertical: 10,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   button: {
     height: 60, // Increased height to match input fields
-    backgroundColor: '#000',
+    backgroundColor: "#000",
     borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginVertical: 20,
   },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
   },
 });

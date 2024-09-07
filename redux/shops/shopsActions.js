@@ -1,4 +1,4 @@
-import { getDocs, collection } from "firebase/firestore";
+import { getDocs, getDoc, collection } from "firebase/firestore";
 import { db } from "../../firebase";
 import { actions } from "./shops";
 export const getAllShops = () => {
