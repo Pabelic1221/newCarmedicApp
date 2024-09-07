@@ -3,7 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   currentLocation: null,
 };
-const productSlice = createSlice({
+const locationSlice = createSlice({
   name: "userLocation",
   initialState: initialState,
   reducers: {
@@ -17,5 +17,5 @@ const productSlice = createSlice({
   },
 });
 
-export const reducer = productSlice.reducer;
-export const actions = productSlice.actions;
+export const reducer = locationSlice.reducer;
+export const actions = locationSlice.actions;

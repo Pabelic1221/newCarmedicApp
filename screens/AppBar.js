@@ -37,10 +37,6 @@ const App = () => {
   return (
     <View style={styles.container}>
       <AppBar />
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        {/* Your scrollable content goes here */}
-        <Text style={styles.content}>Content goes here...</Text>
-      </ScrollView>
     </View>
   );
 };
@@ -68,7 +64,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   container: {
-    flex: 1,
+    marginBottom: 40,
   },
   scrollViewContent: {
     paddingTop: Platform.OS === "android" ? 75 : 100, // Add padding to avoid content overlap

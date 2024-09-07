@@ -9,7 +9,7 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-
+import { MapComponent } from "../components/map/MapComponent";
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
@@ -28,7 +28,6 @@ const ShopRegisterScreen = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  var location = useSelector((state) => state.userLocation.currentLocation);
   const [markerLocation, setMarkerLocation] = useState(null);
 
   const handleMapPress = async (event) => {
@@ -111,30 +110,15 @@ const ShopRegisterScreen = ({ navigation }) => {
             onChangeText={setAddress}
             placeholder="Address"
           />
-          {location && (
-            <View style={styles.mapContainer}>
-              <MapView
-                style={styles.map}
-                showsUserLocation={true}
-                onPress={handleMapPress}
-                region={{
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                  latitudeDelta: 0.0922,
-                  longitudeDelta: 0.0421,
-                }}
-              >
-                {markerLocation && (
-                  <Marker
-                    coordinate={markerLocation}
-                    title="Selected Auto Repair Shop Location"
-                    pinColor="red"
-                  />
-                )}
-              </MapView>
-            </View>
-          )}
-
+          <MapComponent onPress={handleMapPress}>
+            {markerLocation && (
+              <Marker
+                coordinate={markerLocation}
+                title="Selected Auto Repair Shop Location"
+                pinColor="red"
+              />
+            )}
+          </MapComponent>
           <TextInput
             style={styles.input}
             value={password}
@@ -175,12 +159,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 20,
   },
-  mapContainer: {
-    alignSelf: "center",
-    padding: 20,
-    width: 300,
-    height: 400,
-  },
+
   appBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -213,9 +192,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     backgroundColor: "#fff",
   },
-  map: {
-    ...StyleSheet.absoluteFillObject,
-  },
+
   registerButton: {
     height: 50,
     backgroundColor: "#000",

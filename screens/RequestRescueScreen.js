@@ -7,16 +7,17 @@ import {
   FlatList,
   TouchableOpacity,
   Modal,
+  ScrollView,
 } from "react-native";
 import AppBar from "./AppBar"; // Import AppBar component
 import React, { useEffect, useState } from "react";
-import MapView, { Marker } from "react-native-maps";
+import { Marker } from "react-native-maps";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useSelector, useDispatch } from "react-redux";
 import { getAllShops } from "../redux/shops/shopsActions";
 import RequestForm from "../components/modals/RequestForm"; // Import your RequestForm component
-
-const RequestScreen = () => {
+import { MapComponent } from "../components/map/MapComponent";
+const RequestRescueScreen = () => {
   const dispatch = useDispatch();
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedShop, setSelectedShop] = useState(null);
@@ -25,7 +26,6 @@ const RequestScreen = () => {
     dispatch(getAllShops());
   }, [dispatch]);
 
-  const location = useSelector((state) => state.userLocation.currentLocation);
   const shops = useSelector((state) => state.shops.shops);
 
   const handleShopPress = (shop) => {
@@ -41,37 +41,25 @@ const RequestScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <AppBar />
-      {location && (
-        <View style={styles.mapContainer}>
-          <MapView
-            style={styles.map}
-            showsUserLocation={true}
-            region={{
-              latitude: location.latitude,
-              longitude: location.longitude,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421,
-            }}
-          >
-            {shops.map((shop) => {
-              const { longitude, latitude } = shop;
-              if (longitude && latitude) {
-                return (
-                  <Marker
-                    key={shop.id}
-                    coordinate={{ longitude, latitude }}
-                    title={shop.shopName}
-                    description={shop.address}
-                    pinColor="purple"
-                  />
-                );
-              }
-              return null;
-            })}
-          </MapView>
-        </View>
-      )}
+      <MapComponent>
+        {shops.map((shop) => {
+          const { longitude, latitude } = shop;
+          if (longitude && latitude) {
+            return (
+              <Marker
+                key={shop.id}
+                coordinate={{ longitude, latitude }}
+                title={shop.shopName}
+                description={shop.address}
+                pinColor="purple"
+              />
+            );
+          }
+          return null;
+        })}
+      </MapComponent>
       <FlatList
+        style={styles.shopList}
         data={shops}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
@@ -84,9 +72,10 @@ const RequestScreen = () => {
               <View style={styles.shopDetails}>
                 <Text style={styles.shopName}>{item.shopName}</Text>
                 {/*need to style overflow*/}
-                {/*<Text style={styles.shopAddress}>{item.address}</Text> */}
+                <Text style={styles.shopAddress}>{item.address}</Text>
                 <View style={styles.ratingContainer}>
                   <Ionicons name="star" size={18} color="#FFD700" />
+
                   <Text style={styles.shopRating}>
                     {item.rating ?? 0.0} ({item.reviews ?? 0} reviews)
                   </Text>
@@ -103,30 +92,28 @@ const RequestScreen = () => {
         )}
       />
       <Modal
+        transparent={true}
         visible={isModalVisible}
-        onBackdropPress={handleCloseModal}
-        style={styles.modal}
+        onRequestClose={handleCloseModal}
       >
-        <RequestForm shop={selectedShop} onClose={handleCloseModal} />
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContent}>
+            <ScrollView>
+              <RequestForm shop={selectedShop} onClose={handleCloseModal} />
+            </ScrollView>
+          </View>
+        </View>
       </Modal>
     </SafeAreaView>
   );
 };
 
-export default RequestScreen;
+export default RequestRescueScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f2f2f2",
-  },
-  mapContainer: {
-    marginBottom: 10,
-  },
-  map: {
-    height: 200,
-    borderRadius: 10,
-    marginBottom: 10,
   },
   shopItem: {
     flexDirection: "row",
@@ -145,6 +132,7 @@ const styles = StyleSheet.create({
   shopInfo: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
   },
   shopImage: {
     width: 50,
@@ -174,5 +162,22 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#f0f0f0",
     borderRadius: 50,
+    marginLeft: 40,
+  },
+  shopList: {
+    margin: 15,
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Dark background with opacity
+  },
+  modalContent: {
+    height: "70%",
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    overflow: "scroll",
   },
 });
