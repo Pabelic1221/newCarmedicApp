@@ -11,6 +11,8 @@ import DrawerContent from "./screens/DrawerContent";
 import UserProfile from "./screens/UserProfile";
 import { useSelector } from "react-redux";
 import ARSHomeScreen from "./screens/ARSHomeScreen";
+import ShopListScreen from "./screens/ShopListScreen";
+
 const Drawer = createDrawerNavigator();
 
 function DrawerNavigator() {
@@ -36,11 +38,9 @@ function DrawerNavigator() {
       {currentUser?.role !== "Shop" ? (
         <Drawer.Screen name="Request" component={RequestRescueScreen} />
       ) : null}
-      <Drawer.Screen
-        name="Auto Repair Shops"
-        component={AutoRepairShopScreen}
-      />
+      <Drawer.Screen name="Auto Repair Shops" component={ShopListScreen} />
       <Drawer.Screen name="Reviews" component={ReviewsScreen} />
+      <Drawer.Screen name="Auto Repair Shop" component={AutoRepairShopScreen} />
       <Drawer.Screen name="Feedback" component={FeedbackScreen} />
       <Drawer.Screen name="Profile" component={UserProfile} />
     </Drawer.Navigator>
