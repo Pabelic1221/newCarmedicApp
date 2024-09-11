@@ -15,28 +15,21 @@ import { Marker } from "react-native-maps";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useSelector, useDispatch } from "react-redux";
 import { getAllShops } from "../redux/shops/shopsActions";
-import RequestForm from "../components/modals/RequestForm"; // Import your RequestForm component
 import { MapComponent } from "../components/map/MapComponent";
+import { useNavigation } from "@react-navigation/native";
 const RequestRescueScreen = () => {
+  const navigation = useNavigation();
   const dispatch = useDispatch();
-  const [isModalVisible, setModalVisible] = useState(false);
   const [selectedShop, setSelectedShop] = useState(null);
+  const handleShopPress = (shop) => {
+    setSelectedShop(shop);
+  };
 
   useEffect(() => {
     dispatch(getAllShops());
   }, [dispatch]);
 
   const shops = useSelector((state) => state.shops.shops);
-
-  const handleShopPress = (shop) => {
-    setSelectedShop(shop);
-    setModalVisible(true);
-  };
-
-  const handleCloseModal = () => {
-    setModalVisible(false);
-    setSelectedShop(null);
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -84,26 +77,17 @@ const RequestRescueScreen = () => {
             </View>
             <TouchableOpacity
               style={styles.navigateButton}
-              onPress={() => handleShopPress(item)}
+              onPress={() => {
+                navigation.navigate("Auto Repair Shop", {
+                  item,
+                });
+              }}
             >
               <Ionicons name="arrow-forward" size={24} color="#000" />
             </TouchableOpacity>
           </View>
         )}
       />
-      <Modal
-        transparent={true}
-        visible={isModalVisible}
-        onRequestClose={handleCloseModal}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContent}>
-            <ScrollView>
-              <RequestForm shop={selectedShop} onClose={handleCloseModal} />
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 };
