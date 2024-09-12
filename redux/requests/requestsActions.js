@@ -1,4 +1,11 @@
-import { getDocs, collection, doc, getDoc } from "firebase/firestore";
+import {
+  getDocs,
+  collection,
+  doc,
+  getDoc,
+  query,
+  where,
+} from "firebase/firestore";
 import { db } from "../../firebase";
 import { actions } from "./requests";
 
@@ -6,7 +13,14 @@ export const getAllRequests = () => {
   return async (dispatch) => {
     try {
       const requestsCollectionRef = collection(db, "requests");
-      const querySnapshot = await getDocs(requestsCollectionRef);
+
+      // Query to fetch only pending and accepted requests
+      const requestsQuery = query(
+        requestsCollectionRef,
+        where("state", "in", ["pending", "accepted"])
+      );
+
+      const querySnapshot = await getDocs(requestsQuery);
 
       const requests = await Promise.all(
         querySnapshot.docs.map(async (document) => {

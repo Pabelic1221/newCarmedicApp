@@ -12,31 +12,13 @@ const productSlice = createSlice({
       return state;
     },
     updateRequests: (state, action) => {
-      const newRequests = action.payload;
+      console.log("payload", action.payload);
+      console.log("before", state.requests);
 
-      // Create a map for quick access to the existing requests by their id
-      const existingRequestsMap = state.requests.reduce((map, request) => {
-        map[request.id] = request;
-        return map;
-      }, {});
+      state.requests = action.payload;
 
-      // Loop through the new requests and merge with existing ones
-      newRequests.forEach((newReq) => {
-        if (existingRequestsMap[newReq.id]) {
-          // If the request exists, merge the old request with the new fields
-          existingRequestsMap[newReq.id] = {
-            ...existingRequestsMap[newReq.id], // Preserve existing keys/values
-            ...newReq, // Overwrite with new data (e.g., the updated state field)
-          };
-        } else {
-          // If the request is new, add it to the map
-          existingRequestsMap[newReq.id] = newReq;
-        }
-      });
-
-      // Convert the updated map back to an array and assign it to the state
-      state.requests = Object.values(existingRequestsMap);
-      console.log(state);
+      console.log("after", state.requests);
+      return state;
     },
 
     resetRequests: (state) => {

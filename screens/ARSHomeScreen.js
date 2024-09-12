@@ -17,6 +17,7 @@ import { useSelector, useDispatch } from "react-redux";
 import RequestTicket from "../components/modals/RequestTicket";
 import { MapComponent } from "../components/map/MapComponent";
 import { getAllRequests } from "../redux/requests/requestsActions";
+import EndTicket from "../components/modals/endTicketModal";
 const ARSHomeScreen = () => {
   const dispatch = useDispatch();
   const [isModalVisible, setModalVisible] = useState(false);
@@ -108,7 +109,14 @@ const ARSHomeScreen = () => {
         transparent={true}
       >
         <ScrollView>
-          <RequestTicket request={selectedRequest} onClose={handleCloseModal} />
+          {selectedRequest?.state === "accepted" ? (
+            <EndTicket request={selectedRequest} onClose={handleCloseModal} />
+          ) : (
+            <RequestTicket
+              request={selectedRequest}
+              onClose={handleCloseModal}
+            />
+          )}
         </ScrollView>
       </Modal>
     </SafeAreaView>
