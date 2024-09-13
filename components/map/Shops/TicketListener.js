@@ -1,6 +1,13 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { collection, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  query,
+  where,
+  doc,
+  getDoc,
+} from "firebase/firestore";
 import { db } from "../../../firebase";
 import { actions } from "../../../redux/requests/requests";
 import PropTypes from "prop-types";
@@ -11,16 +18,47 @@ const TicketListener = ({ children }) => {
   useEffect(() => {
     const colRef = collection(db, "requests");
 
-    const unsubscribe = onSnapshot(
+    // Query to fetch only pending and accepted requests
+    const requestsQuery = query(
       colRef,
-      (snapshot) => {
-        // Map the documents to include the 'id' along with the data
-        const data = snapshot.docs.map((doc) => ({
-          id: doc.id, // Add the document's id here
-          ...doc.data(), // Spread the rest of the document's data
-        }));
+      where("state", "in", ["pending", "accepted"])
+    );
 
-        dispatch(actions.updateRequests(data));
+    const unsubscribe = onSnapshot(
+      requestsQuery,
+      async (snapshot) => {
+        try {
+          // Fetch requests with user details
+          const requests = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+
+          // Fetch user details for each request
+          const requestsWithUserDetails = await Promise.all(
+            requests.map(async (request) => {
+              const userDocRef = doc(db, "users", request.userId);
+              const userDoc = await getDoc(userDocRef);
+
+              if (userDoc.exists()) {
+                const { firstName, lastName, email } = userDoc.data();
+                return {
+                  ...request,
+                  firstName,
+                  lastName,
+                  email,
+                };
+              }
+
+              // If user document does not exist, return request without user details
+              return request;
+            })
+          );
+
+          dispatch(actions.updateRequests(requestsWithUserDetails));
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
       },
       (error) => {
         console.error("Error fetching data:", error);

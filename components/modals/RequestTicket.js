@@ -7,29 +7,14 @@ export default function RequestTicket({ request, onClose }) {
   const [loading, setLoading] = useState(false);
 
   // Accept the request and update its state in Firestore
-  const handleAcceptRequest = async () => {
-    setLoading(true);
-    try {
-      const requestDocRef = doc(db, "requests", request.id);
-      await updateDoc(requestDocRef, {
-        state: "accepted",
-      });
-      console.log("Request accepted");
-      onClose();
-    } catch (error) {
-      console.error("Error accepting request: ", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Reject the request and update its state in Firestore
-  const handleDeclineRequest = async () => {
+  const handleRequest = async (state) => {
     setLoading(true);
     try {
       const requestDocRef = doc(db, "requests", request.id);
       await updateDoc(requestDocRef, {
-        state: "rejected",
+        state,
       });
       console.log("Request rejected");
       onClose(); // Close the modal
@@ -84,14 +69,14 @@ export default function RequestTicket({ request, onClose }) {
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.acceptButton}
-              onPress={handleAcceptRequest}
+              onPress={handleRequest("accepted")}
               disabled={loading}
             >
               <Text style={styles.acceptButtonText}>Accept</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.declineButton}
-              onPress={handleDeclineRequest}
+              onPress={handleRequest("declined")}
               disabled={loading}
             >
               <Text style={styles.declineButtonText}>Decline</Text>
