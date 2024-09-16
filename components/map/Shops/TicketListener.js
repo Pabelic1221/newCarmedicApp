@@ -8,7 +8,8 @@ import {
   doc,
   getDoc,
 } from "firebase/firestore";
-import { db } from "../../../firebase";
+import { getAuth } from "firebase/auth";
+import { db } from "../../../firebase"; // Import auth from firebase config
 import { actions } from "../../../redux/requests/requests";
 import PropTypes from "prop-types";
 
@@ -16,12 +17,23 @@ const TicketListener = ({ children }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    const auth = getAuth();
+    const currentUser = auth.currentUser; // Get current authenticated user
+
+    if (!currentUser) {
+      console.error("User not authenticated");
+      return;
+    }
+
+    const storeId = currentUser.uid; // Use the current user's UID as storeId
+
     const colRef = collection(db, "requests");
 
-    // Query to fetch only pending and accepted requests
+    // Query to fetch only pending and accepted requests where userId is the current storeId
     const requestsQuery = query(
       colRef,
-      where("state", "in", ["pending", "accepted"])
+      where("state", "in", ["pending", "accepted"]),
+      where("storeId", "==", storeId) // Filter by the current storeId
     );
 
     const unsubscribe = onSnapshot(

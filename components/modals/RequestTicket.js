@@ -3,12 +3,11 @@ import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { db } from "../../firebase";
 import { doc, updateDoc } from "firebase/firestore"; // Firestore update function
 import Ionicons from "react-native-vector-icons/Ionicons";
+
 export default function RequestTicket({ request, onClose }) {
   const [loading, setLoading] = useState(false);
 
-  // Accept the request and update its state in Firestore
-
-  // Reject the request and update its state in Firestore
+  // Accept or reject the request and update its state in Firestore
   const handleRequest = async (state) => {
     setLoading(true);
     try {
@@ -16,10 +15,10 @@ export default function RequestTicket({ request, onClose }) {
       await updateDoc(requestDocRef, {
         state,
       });
-      console.log("Request rejected");
+      console.log(`Request ${state}`);
       onClose(); // Close the modal
     } catch (error) {
-      console.error("Error rejecting request: ", error);
+      console.error(`Error updating request: ${error}`);
     } finally {
       setLoading(false);
     }
@@ -69,14 +68,14 @@ export default function RequestTicket({ request, onClose }) {
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.acceptButton}
-              onPress={handleRequest("accepted")}
+              onPress={() => handleRequest("accepted")} // Wrap in anonymous function
               disabled={loading}
             >
               <Text style={styles.acceptButtonText}>Accept</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.declineButton}
-              onPress={handleRequest("declined")}
+              onPress={() => handleRequest("declined")} // Wrap in anonymous function
               disabled={loading}
             >
               <Text style={styles.declineButtonText}>Decline</Text>
