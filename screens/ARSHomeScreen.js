@@ -94,7 +94,9 @@ const ARSHomeScreen = () => {
             {/* Button to Navigate to Request Details */}
             <TouchableOpacity
               style={styles.navigateButton}
-              onPress={() => handleRequestPress(item)}
+              onPress={() => {
+                handleRequestPress(item);
+              }}
             >
               <Ionicons name="arrow-forward" size={24} color="#000" />
             </TouchableOpacity>
@@ -105,17 +107,25 @@ const ARSHomeScreen = () => {
       {/* Modal for Request Form */}
       <Modal
         visible={isModalVisible}
-        onBackdropPress={handleCloseModal}
+        onRequestClose={handleCloseModal} // This ensures that the modal can be closed by back press on Android
         transparent={true}
+        animationType="slide"
       >
         <ScrollView>
-          {selectedRequest?.state === "accepted" ? (
-            <EndTicket request={selectedRequest} onClose={handleCloseModal} />
+          {/* Render modal content only if a request is selected */}
+          {selectedRequest ? (
+            selectedRequest.state === "accepted" ? (
+              <EndTicket request={selectedRequest} onClose={handleCloseModal} />
+            ) : (
+              <RequestTicket
+                request={selectedRequest}
+                onClose={handleCloseModal}
+              />
+            )
           ) : (
-            <RequestTicket
-              request={selectedRequest}
-              onClose={handleCloseModal}
-            />
+            <View>
+              <Text>No request selected</Text>
+            </View>
           )}
         </ScrollView>
       </Modal>
