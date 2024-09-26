@@ -14,7 +14,7 @@ import React, {
     onSnapshot
   } from 'firebase/firestore';
   import { signOut } from 'firebase/auth';
-  import { auth, database } from '../config/firebase';
+  import { auth, db } from '../firebase';
   import { useNavigation } from '@react-navigation/native';
   import { AntDesign } from '@expo/vector-icons';
   import colors from '../colors';
@@ -46,7 +46,7 @@ import React, {
 
     useLayoutEffect(() => {
 
-        const collectionRef = collection(database, 'chats');
+        const collectionRef = collection(db, 'chats');
         const q = query(collectionRef, orderBy('createdAt', 'desc'));
 
     const unsubscribe = onSnapshot(q, querySnapshot => {
@@ -69,7 +69,7 @@ import React, {
         );
         // setMessages([...messages, ...messages]);
         const { _id, createdAt, text, user } = messages[0];    
-        addDoc(collection(database, 'chats'), {
+        addDoc(collection(db, 'chats'), {
           _id,
           createdAt,
           text,

@@ -26,6 +26,7 @@
     "proptypes": "^1.1.0",
     "react": "18.2.0",
     "react-native": "0.74.5",
+    "react-native-gifted-chat": "^2.6.3",
     "react-native-maps": "1.14.0",
     "react-native-paper": "^5.12.5",
     "react-native-picker-select": "^9.3.1",

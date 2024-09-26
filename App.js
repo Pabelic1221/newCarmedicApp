@@ -56,7 +56,7 @@ export default function App() {
              <Stack.Screen name="UserProfile" component={UserProfile} />
            
              {/* Chat Screen */}
-              <Stack.Screen name="Chat" component={ChatScreen} />
+              <Stack.Screen name="ChatScreen" component={ChatScreen} />
             </Stack.Navigator>
             </NavigationContainer>
           </TicketListener>
