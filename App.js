@@ -6,15 +6,14 @@ import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 import UserRegisterScreen from "./screens/UserRegisterScreen";
 import ShopRegisterScreen from "./screens/ShopRegisterScreen";
-import DrawerNavigator from "./DrawerNavigator"; // Import DrawerNavigator for main app navigation
-import UserProfile from "./screens/UserProfile"; // Import UserProfile
-import ChatScreen from "./screens/ChatScreen"; // Assuming your ChatScreen is in the screens folder
+import DrawerNavigator from "./DrawerNavigator";
+import UserProfile from "./screens/UserProfile";
+import ChatScreen from "./screens/ChatScreen";
 
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "./redux/store";
 import GeoLocator from "./components/GeoLocator";
-import AutoRepairShopsScreen from "./screens/AutoRepairShopScreen";
 import { View, Text } from "react-native";
 import TicketListener from "./components/map/Shops/TicketListener";
 const Stack = createNativeStackNavigator();

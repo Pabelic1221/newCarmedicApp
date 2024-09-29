@@ -1,4 +1,3 @@
-import { useNavigation } from "@react-navigation/core";
 import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
@@ -8,7 +7,9 @@ import {
   View,
   Image,
   Alert,
+  AppState,
 } from "react-native";
+import { useNavigation } from "@react-navigation/core";
 import { auth, db } from "../firebase";
 import {
   onAuthStateChanged,
@@ -16,16 +17,23 @@ import {
   signOut,
 } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { getCurrentUser } from "../redux/user/userActions";
-import { useSelector } from "react-redux";
 import { actions } from "../redux/user/user";
+
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const currentUser = useSelector((state) => state.user.currentUser);
+
+  // Function to update user status in Firestore
+  const updateUserStatus = async (userId, status) => {
+    const userDocRef = doc(db, "users", userId);
+    await updateDoc(userDocRef, { status });
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user && !user.emailVerified) {
@@ -40,33 +48,57 @@ const LoginScreen = () => {
         navigation.replace("Login");
       } else if (user && user.emailVerified) {
         dispatch(getCurrentUser(user));
+        updateUserStatus(user.uid, "online"); // Set status to 'online' when the user is logged in
       }
     });
+
+    // AppState listener to track app background/foreground state
+    const appStateListener = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "background" || nextAppState === "inactive") {
+        if (auth.currentUser) {
+          updateUserStatus(auth.currentUser.uid, "offline"); // Set status to 'offline' when app is in background or inactive
+        }
+      } else if (nextAppState === "active") {
+        if (auth.currentUser) {
+          updateUserStatus(auth.currentUser.uid, "online"); // Set status to 'online' when app comes to foreground
+        }
+      }
+    });
+
     if (currentUser) {
       navigation.replace("Main");
     }
-    return unsubscribe;
-  }, [navigation, onAuthStateChanged, dispatch, currentUser]);
+
+    return () => {
+      unsubscribe();
+      appStateListener.remove(); // Remove app state listener
+    };
+  }, [navigation, dispatch, currentUser]);
 
   const handleLogin = async () => {
     try {
-      const userCredentials = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const userCredentials = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredentials.user;
 
       if (user.emailVerified) {
         const userDocRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userDocRef);
 
-        if (userDoc.exists() && userDoc.data().verified === false) {
-          await updateDoc(userDocRef, { verified: true });
-        }
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
 
-        console.log("Logged in with:", user.email);
-        navigation.replace("Main"); // Navigate to Main which includes DrawerNavigator
+          // Update the status for both users and shops
+          if (userData.role === "User" && !userData.verified) {
+            await updateDoc(userDocRef, { verified: true });
+          }
+
+          // Update user status based on their role
+          updateUserStatus(user.uid, "online"); // Update status to 'online' after successful login
+          console.log("Logged in with:", user.email);
+          navigation.replace("Main"); // Navigate to Main which includes DrawerNavigator
+        } else {
+          Alert.alert("User not found", "No user data found in Firestore.");
+        }
       } else {
         Alert.alert(
           "Email not verified",
@@ -76,6 +108,15 @@ const LoginScreen = () => {
       }
     } catch (error) {
       alert(error.message);
+    }
+  };
+
+  const handleSignOut = async () => {
+    if (auth.currentUser) {
+      await updateUserStatus(auth.currentUser.uid, "offline"); // Update status to 'offline' on sign out
+      await signOut(auth);
+      dispatch(actions.resetUser());
+      navigation.replace("Login");
     }
   };
 
