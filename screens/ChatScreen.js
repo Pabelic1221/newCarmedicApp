@@ -6,7 +6,6 @@ import { signOut } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { useNavigation, useRoute } from '@react-navigation/native';  // Added useRoute to get shopId from navigation params
 import { AntDesign, FontAwesome } from '@expo/vector-icons';  // For status icon
-import colors from '../colors';
 
 export default function Chat() {
   const [messages, setMessages] = useState([]);
