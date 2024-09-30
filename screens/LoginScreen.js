@@ -36,19 +36,17 @@ const LoginScreen = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && !user.emailVerified) {
-        signOut(auth).then(() => {
-          dispatch(actions.resetUser());
-          navigation.replace("Login");
-        });
-        Alert.alert(
-          "Email not verified",
-          "Please verify your email before logging in."
-        );
-        navigation.replace("Login");
-      } else if (user && user.emailVerified) {
-        dispatch(getCurrentUser(user));
-        updateUserStatus(user.uid, "online"); // Set status to 'online' when the user is logged in
+      if (user) {
+        if (!user.emailVerified) {
+          signOut(auth).then(() => {
+            dispatch(actions.resetUser());
+            Alert.alert("Email not verified", "Please verify your email before logging in.");
+            navigation.replace("Login");
+          });
+        } else {
+          dispatch(getCurrentUser(user));
+          updateUserStatus(user.uid, "online"); // Set status to 'online' when the user is logged in
+        }
       }
     });
 
@@ -87,26 +85,24 @@ const LoginScreen = () => {
         if (userDoc.exists()) {
           const userData = userDoc.data();
 
-          // Update the status for both users and shops
+          // If the user is unverified, mark them as verified
           if (userData.role === "User" && !userData.verified) {
             await updateDoc(userDocRef, { verified: true });
           }
 
-          // Update user status based on their role
-          updateUserStatus(user.uid, "online"); // Update status to 'online' after successful login
+          // Update the user's status and navigate
+          await updateUserStatus(user.uid, "online"); // Ensure this finishes before navigating
           console.log("Logged in with:", user.email);
-          navigation.replace("Main"); // Navigate to Main which includes DrawerNavigator
+          navigation.replace("Main"); // Navigate to Main
         } else {
           Alert.alert("User not found", "No user data found in Firestore.");
         }
       } else {
-        Alert.alert(
-          "Email not verified",
-          "Please verify your email before logging in."
-        );
-        signOut(auth);
+        Alert.alert("Email not verified", "Please verify your email before logging in.");
+        await signOut(auth); // Ensure sign out completes
       }
     } catch (error) {
+      console.error("Login error:", error.message); // More detailed error logging
       alert(error.message);
     }
   };
