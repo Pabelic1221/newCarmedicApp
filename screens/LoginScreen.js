@@ -77,23 +77,29 @@ const LoginScreen = () => {
     try {
       const userCredentials = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredentials.user;
-
+  
       if (user.emailVerified) {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-
+        // Check in 'users' collection first
+        let userDocRef = doc(db, "users", user.uid);
+        let userDoc = await getDoc(userDocRef);
+  
+        // If not found, check in 'shops' collection
+        if (!userDoc.exists()) {
+          userDocRef = doc(db, "shops", user.uid);  // Adjust collection name if needed
+          userDoc = await getDoc(userDocRef);
+        }
+  
         if (userDoc.exists()) {
           const userData = userDoc.data();
-
-          // If the user is unverified, mark them as verified
+  
+          // Handle verification logic for users
           if (userData.role === "User" && !userData.verified) {
             await updateDoc(userDocRef, { verified: true });
           }
-
-          // Update the user's status and navigate
-          await updateUserStatus(user.uid, "online"); // Ensure this finishes before navigating
+  
+          await updateUserStatus(user.uid, "online"); // Set status to 'online'
           console.log("Logged in with:", user.email);
-          navigation.replace("Main"); // Navigate to Main
+          navigation.replace("Main");
         } else {
           Alert.alert("User not found", "No user data found in Firestore.");
         }
@@ -102,11 +108,11 @@ const LoginScreen = () => {
         await signOut(auth); // Ensure sign out completes
       }
     } catch (error) {
-      console.error("Login error:", error.message); // More detailed error logging
+      console.error("Login error:", error.message);
       alert(error.message);
     }
   };
-
+  
   const handleSignOut = async () => {
     if (auth.currentUser) {
       await updateUserStatus(auth.currentUser.uid, "offline"); // Update status to 'offline' on sign out
