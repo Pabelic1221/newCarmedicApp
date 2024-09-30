@@ -12,7 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import RequestForm from "../components/modals/RequestForm";
-import AppBar from "./AppBar";
+import ShopAppBar from "./ShopAppBar";
 
 const AutoRepairShopsScreen = () => {
   const route = useRoute();
@@ -39,7 +39,7 @@ const AutoRepairShopsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <AppBar />
+      <ShopAppBar />
       <View style={styles.contentContainer}>
         <View style={styles.shopInfo}>
           <View style={styles.imageContainer}>

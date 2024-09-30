@@ -9,7 +9,7 @@ import {
   Modal,
   ScrollView,
 } from "react-native";
-import AppBar from "./AppBar"; // Import AppBar component
+import ShopAppBar from "./ShopAppBar"; // Import AppBar component
 import React, { useEffect, useState } from "react";
 import { Marker } from "react-native-maps";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -41,7 +41,7 @@ const ARSHomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <AppBar />
+      <ShopAppBar />
 
       <MapComponent>
         {requests.map((request) => {

@@ -79,22 +79,36 @@ const LoginScreen = () => {
       const user = userCredentials.user;
   
       if (user.emailVerified) {
-        // Check in 'users' collection first
+        // Check first in the 'users' collection
         let userDocRef = doc(db, "users", user.uid);
         let userDoc = await getDoc(userDocRef);
   
-        // If not found, check in 'shops' collection
         if (!userDoc.exists()) {
-          userDocRef = doc(db, "shops", user.uid);  // Adjust collection name if needed
+          // If not found, check in the 'shops' collection
+          userDocRef = doc(db, "shops", user.uid);
           userDoc = await getDoc(userDocRef);
         }
   
         if (userDoc.exists()) {
           const userData = userDoc.data();
+          console.log("User Data:", userData); // Log user data for debugging
   
-          // Handle verification logic for users
-          if (userData.role === "User" && !userData.verified) {
-            await updateDoc(userDocRef, { verified: true });
+          // Handle verification logic based on user role
+          if (userData.role === "User") {
+            if (!userData.verified) {
+              Alert.alert("Account not verified", "Please verify your account before logging in.");
+              await signOut(auth); // Sign out if not verified
+              return; // Early exit
+            }
+          } else if (userData.role === "Shop") {
+            // Additional logic for shops can go here if needed
+            // e.g., you can update shop-specific fields or do other actions.
+            // Ensure that the shop is verified if required
+            if (!userData.verified) {
+              Alert.alert("Shop account not verified", "Please verify your shop account before logging in.");
+              await signOut(auth); // Sign out if not verified
+              return; // Early exit
+            }
           }
   
           await updateUserStatus(user.uid, "online"); // Set status to 'online'
@@ -112,6 +126,7 @@ const LoginScreen = () => {
       alert(error.message);
     }
   };
+  
   
   const handleSignOut = async () => {
     if (auth.currentUser) {

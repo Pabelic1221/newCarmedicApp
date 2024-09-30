@@ -22,11 +22,8 @@ const ShopAppBar = () => {
         </TouchableOpacity>
         <Text style={styles.appTitle}>CarMedic</Text>
         <TouchableOpacity
-          onPress={() => {
-            /* Add Search Functionality */
-          }}
-        >
-          <Ionicons name="search" size={30} color="#fff" />
+          onPress={() => navigation.navigate('ChatList')}>
+          <Ionicons name="chatbubble-outline" size={30} color="#fff" />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
