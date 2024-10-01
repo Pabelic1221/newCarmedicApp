@@ -1,16 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, Image } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Image, SafeAreaView } from 'react-native';
 import { auth, db } from '../../firebase';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import ShopAppBar from '../../screens/ShopAppBar';
 
 const ChatList = ({ navigation }) => {
   const [chats, setChats] = useState([]);
 
   useEffect(() => {
-    const fetchChats = async () => {
-      const shopId = auth.currentUser.uid; // Assuming the shop is authenticated
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        const shopId = user.uid; // Get authenticated user's (shop) ID
+        fetchChats(shopId);
+      } else {
+        console.error("User is not authenticated");
+      }
+    });
+
+    // Unsubscribe from the auth listener when the component unmounts
+    return () => unsubscribe();
+  }, []);
+
+  const fetchChats = async (shopId) => {
+    try {
       const chatsRef = collection(db, 'chats');
-      const q = query(chatsRef, where('shopId', '==', shopId), orderBy('latestMessageTimestamp', 'desc'));
+      const q = query(
+        chatsRef,
+        where('shopId', '==', shopId),
+        orderBy('latestMessageTimestamp', 'desc')
+      );
 
       const querySnapshot = await getDocs(q);
       const chatList = querySnapshot.docs.map(doc => ({
@@ -19,21 +37,24 @@ const ChatList = ({ navigation }) => {
       }));
 
       setChats(chatList);
-    };
-
-    fetchChats();
-  }, []);
+    } catch (error) {
+      console.error("Error fetching chat data: ", error);
+    }
+  };
 
   const renderChatItem = ({ item }) => {
     return (
-      <View style={styles.chatItem}>
-        <Image source={{ uri: item.userPhotoUrl }} style={styles.profileImage} />
-        <View style={styles.chatDetails}>
-          <Text style={styles.userName}>{item.userName}</Text>
-          <Text style={styles.latestMessage}>{item.latestMessage}</Text>
+      <SafeAreaView style={styles.container}>
+        <ShopAppBar />
+        <View style={styles.chatItem}>
+          <Image source={{ uri: item.userPhotoUrl }} style={styles.profileImage} />
+          <View style={styles.chatDetails}>
+            <Text style={styles.userName}>{item.userName}</Text>
+            <Text style={styles.latestMessage}>{item.latestMessage}</Text>
+          </View>
+          <Text style={styles.time}>{new Date(item.latestMessageTimestamp?.toDate()).toLocaleTimeString()}</Text>
         </View>
-        <Text style={styles.time}>{new Date(item.latestMessageTimestamp?.toDate()).toLocaleTimeString()}</Text>
-      </View>
+      </SafeAreaView>
     );
   };
 

@@ -1,52 +1,44 @@
 import React, { useState, useLayoutEffect, useCallback, useEffect } from 'react';
-import { View, Text, AppState } from 'react-native';
+import { View, Text, AppState, StyleSheet } from 'react-native';
 import { GiftedChat } from 'react-native-gifted-chat';
 import { collection, addDoc, orderBy, query, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '../firebase';
-import { useNavigation, useRoute } from '@react-navigation/native';  // Added useRoute to get shopId from navigation params
-import { AntDesign, FontAwesome } from '@expo/vector-icons';  // For status icon
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { FontAwesome } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Appbar from './AppBar';
 
 export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [shopName, setShopName] = useState('');
-  const [shopStatus, setShopStatus] = useState('offline');  // Default to offline
-  const navigation = useNavigation();
-  const route = useRoute();  // Get route parameters
-
-  // Fetch shopId from route params (ensure the screen navigating here passes the shopId)
+  const [shopStatus, setShopStatus] = useState('offline');
+  const route = useRoute();
   const { shopId } = route.params;
 
   const onSignOut = () => {
     signOut(auth).catch(error => console.log('Error logging out: ', error));
   };
 
-  // Real-time listener for shop's name and status
   useLayoutEffect(() => {
-    if (!shopId) return; // Prevent running without shopId
-
+    if (!shopId) return;
     const shopRef = doc(db, 'shops', shopId);
-
     const unsubscribe = onSnapshot(shopRef, (docSnap) => {
       if (docSnap.exists()) {
         const shopData = docSnap.data();
-        setShopName(shopData.shopName);  // Update the shop's name
-        setShopStatus(shopData.status);  // Update the shop's status in real-time
+        setShopName(shopData.shopName);
+        setShopStatus(shopData.status);
       } else {
         console.log('No such shop found!');
       }
     });
-
-    return () => unsubscribe();  // Cleanup the listener when the component unmounts
+    return () => unsubscribe();
   }, [shopId]);
 
-  // Handle chat messages
   useLayoutEffect(() => {
-    if (!shopId) return; // Ensure shopId is present before fetching messages
-
-    const collectionRef = collection(db, 'chats', shopId, 'messages');  // Organized by shopId
+    if (!shopId) return;
+    const collectionRef = collection(db, 'chats', shopId, 'messages');
     const q = query(collectionRef, orderBy('createdAt', 'desc'));
-
     const unsubscribe = onSnapshot(q, querySnapshot => {
       setMessages(
         querySnapshot.docs.map(doc => ({
@@ -57,19 +49,19 @@ export default function Chat() {
         }))
       );
     });
-
     return unsubscribe;
   }, [shopId]);
 
   const onSend = useCallback((messages = []) => {
-    if (!shopId) return; // Prevent sending if shopId is missing
-
+    if (!shopId) return;
+    const newMessages = messages.filter(message => message.text.trim() !== ''); // Filter valid messages
+    if (newMessages.length === 0) return; // Prevent sending empty messages
     setMessages(previousMessages =>
-      GiftedChat.append(previousMessages, messages)
+      GiftedChat.append(previousMessages, newMessages)
     );
-    
-    const { _id, createdAt, text, user } = messages[0];
-    addDoc(collection(db, 'chats', shopId, 'messages'), {  // Save to a subcollection under shopId
+
+    const { _id, createdAt, text, user } = newMessages[0];
+    addDoc(collection(db, 'chats', shopId, 'messages'), {
       _id,
       createdAt,
       text,
@@ -77,26 +69,24 @@ export default function Chat() {
     });
   }, [shopId]);
 
-  // Function to get the status icon based on shop status
   const getStatusIcon = () => {
     switch (shopStatus) {
       case 'online':
-        return <FontAwesome name="circle" size={12} color="green" />;  // Green for online
+        return <FontAwesome name="circle" size={12} color="green" />;
       case 'busy':
-        return <FontAwesome name="circle" size={12} color="red" />;  // Red for busy
+        return <FontAwesome name="circle" size={12} color="red" />;
       default:
-        return <FontAwesome name="circle" size={12} color="gray" />;  // Gray for offline
+        return <FontAwesome name="circle" size={12} color="gray" />;
     }
   };
 
-  // Update shop status based on app state
   const handleAppStateChange = async (nextAppState) => {
     const shopRef = doc(db, 'shops', shopId);
     if (nextAppState === 'active') {
       await updateDoc(shopRef, {
         status: 'online',
       });
-    } else if (nextAppState === 'background' || nextAppState === 'inactive') {
+    } else {
       await updateDoc(shopRef, {
         status: 'offline',
       });
@@ -105,34 +95,58 @@ export default function Chat() {
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', handleAppStateChange);
-
-    // Clean up the listener when component unmounts
     return () => {
       subscription.remove();
     };
   }, []);
 
   return (
-    <View style={{ flex: 1 }}>
-      {/* Header with Shop's Name and Status */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, backgroundColor: '#f2f2f2' }}>
-        <Text style={{ fontWeight: 'bold', fontSize: 18 }}>{shopName}</Text>
-        <View style={{ marginLeft: 10 }}>{getStatusIcon()}</View>
+    <SafeAreaView style={styles.container}>
+      <Appbar />
+      <View style={{ flex: 1 }}>
+        <View style={styles.header}>
+          <Text style={styles.shopName}>{shopName}</Text>
+          <View style={styles.statusIcon}>{getStatusIcon()}</View>
+        </View>
+        <GiftedChat
+          messages={messages}
+          showAvatarForEveryMessage={false}
+          showUserAvatar={false}
+          onSend={messages => onSend(messages)}
+          messagesContainerStyle={styles.messagesContainer}
+          textInputStyle={styles.textInput}
+          user={{
+            _id: auth?.currentUser?.uid,
+            avatar: 'https://i.pravatar.cc/300',
+          }}
+        />
       </View>
-
-      {/* Chat Messages */}
-      <GiftedChat
-        messages={messages}
-        showAvatarForEveryMessage={false}
-        showUserAvatar={false}
-        onSend={messages => onSend(messages)}
-        messagesContainerStyle={{ backgroundColor: '#fff' }}
-        textInputStyle={{ backgroundColor: '#fff', borderRadius: 20 }}
-        user={{
-          _id: auth?.currentUser?.uid,  // Using UID instead of email for better identification
-          avatar: 'https://i.pravatar.cc/300',  // Placeholder avatar, can be customized
-        }}
-      />
-    </View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#f2f2f2',
+  },
+  shopName: {
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  statusIcon: {
+    marginLeft: 10,
+  },
+  messagesContainer: {
+    backgroundColor: '#fff',
+  },
+  textInput: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+  },
+});

@@ -1,18 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   TextInput,
   StyleSheet,
-  TouchableOpacity,
+ TouchableOpacity,
   Alert,
 } from "react-native";
-
 import Icon from "react-native-vector-icons/Ionicons";
 import RNPickerSelect from "react-native-picker-select";
 import { auth, db } from "../../firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { useSelector } from "react-redux";
+
 export default function RequestForm({ shop, onClose }) {
   const [problem, setProblem] = useState("");
   const [carBrand, setCarBrand] = useState("");
@@ -21,11 +21,27 @@ export default function RequestForm({ shop, onClose }) {
   const { longitude, latitude } = useSelector(
     (state) => state.userLocation.currentLocation
   );
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check user authentication status on component mount
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setIsAuthenticated(true); // User is authenticated
+      } else {
+        console.error("User not authenticated");
+        setIsAuthenticated(false); // User is not authenticated
+      }
+    });
+
+    return () => unsubscribe(); // Clean up the auth listener
+  }, []);
+
   const handleSubmit = async () => {
-    const userId = auth.currentUser?.uid;
+    const userId = auth.currentUser?.uid; // Ensure current user is available
 
     if (!userId) {
-      console.error("User not authenticated");
+      Alert.alert("User is not authenticated. Please log in first.");
       return;
     }
 
@@ -50,9 +66,20 @@ export default function RequestForm({ shop, onClose }) {
       Alert.alert("Request submitted successfully!");
       onClose();
     } catch (error) {
-      Alert.alert("Error submitting request: ", error);
+      Alert.alert("Error submitting request: ", error.message);
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>Please log in to submit a request.</Text>
+        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <Icon name="close" size={24} color="#000" />
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -68,7 +95,6 @@ export default function RequestForm({ shop, onClose }) {
           { label: "Engine Issue", value: "engine" },
           { label: "Brake Issue", value: "brake" },
           { label: "Transmission Issue", value: "transmission" },
-          // Add more items here
         ]}
         style={pickerSelectStyles}
         placeholder={{ label: "Select", value: null }}
@@ -114,7 +140,6 @@ const styles = StyleSheet.create({
     top: 10,
     right: 10,
   },
-
   title: {
     fontSize: 24,
     fontWeight: "bold",
@@ -148,6 +173,12 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  errorText: {
+    fontSize: 18,
+    color: "red",
+    textAlign: "center",
+    marginTop: 50,
   },
 });
 
