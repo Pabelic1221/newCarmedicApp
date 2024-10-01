@@ -44,8 +44,8 @@ const styles = StyleSheet.create({
     zIndex: 1, // Ensure the app bar stays on top of other content
   },
   appBar: {
-    position: "absolute", // Positioning the app bar at the top
-    top: 0,
+    position: "relative", // Positioning the app bar at the top
+    top: 30,
     left: 0,
     right: 0,
     flexDirection: "row",

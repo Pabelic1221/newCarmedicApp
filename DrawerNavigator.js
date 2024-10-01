@@ -1,15 +1,17 @@
 import React from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { StatusBar, Platform } from "react-native";
+import { useSelector } from "react-redux";
 
+// Screens
 import HomeScreen from "./screens/HomeScreen";
 import RequestRescueScreen from "./screens/RequestRescueScreen";
 import AutoRepairShopScreen from "./screens/AutoRepairShopScreen";
 import ReviewsScreen from "./screens/ReviewsScreen";
 import FeedbackScreen from "./screens/FeedbackScreen";
 import DrawerContent from "./screens/DrawerContent";
+import ShopDrawerContent from "./screens/ShopDrawerContent"; // Import ShopDrawerContent
 import UserProfile from "./screens/UserProfile";
-import { useSelector } from "react-redux";
 import ARSHomeScreen from "./screens/ARSHomeScreen";
 import ShopListScreen from "./screens/ShopListScreen";
 
@@ -17,9 +19,17 @@ const Drawer = createDrawerNavigator();
 
 function DrawerNavigator() {
   const { currentUser } = useSelector((state) => state.user);
+
   return (
     <Drawer.Navigator
-      drawerContent={(props) => <DrawerContent {...props} />}
+      // Conditionally choose between ShopDrawerContent and DrawerContent
+      drawerContent={(props) =>
+        currentUser?.role === "Shop" ? (
+          <ShopDrawerContent {...props} />
+        ) : (
+          <DrawerContent {...props} />
+        )
+      }
       screenOptions={{
         headerShown: false, // Hide headers for all drawer screens
         drawerType: "front",
@@ -31,13 +41,14 @@ function DrawerNavigator() {
         overlayColor: "rgba(0,0,0,0.5)",
       }}
     >
+      {/* Conditionally load screens based on the user's role */}
       <Drawer.Screen
         name="Home"
         component={currentUser?.role === "Shop" ? ARSHomeScreen : HomeScreen}
       />
-      {currentUser?.role !== "Shop" ? (
+      {currentUser?.role !== "Shop" && (
         <Drawer.Screen name="Request" component={RequestRescueScreen} />
-      ) : null}
+      )}
       <Drawer.Screen name="Auto Repair Shops" component={ShopListScreen} />
       <Drawer.Screen name="Reviews" component={ReviewsScreen} />
       <Drawer.Screen name="Auto Repair Shop" component={AutoRepairShopScreen} />

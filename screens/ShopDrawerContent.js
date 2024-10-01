@@ -12,6 +12,7 @@ import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 import { actions } from "../redux/user/user";
 import { useDispatch } from "react-redux";
+
 const ShopDrawerContent = (props) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -50,7 +51,7 @@ const ShopDrawerContent = (props) => {
           onPress={() => navigation.navigate("Request")}
           style={styles.drawerItem}
         >
-          <Text style={styles.drawerItemText}>Request</Text>
+          <Text style={styles.drawerItemText}>Message</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => navigation.navigate("Auto Repair Shops")}
@@ -89,6 +90,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   profileImage: {
+    marginTop: 30,
     width: 150,
     height: 150,
     borderRadius: 100,
@@ -102,17 +104,18 @@ const styles = StyleSheet.create({
   drawerItemsContainer: {
     flex: 0, // Change to 1 If you Want Good Spacing
     justifyContent: "center",
+    marginHorizontal: 20,
   },
   drawerItem: {
     paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    alignItems: "center",
+    alignItems: "flex-start", // Align items to the left
+    // borderBottomWidth: 1, // Removed separator lines
+    // borderBottomColor: "#ddd",
   },
   drawerItemText: {
     fontSize: 21,
     color: "#808080",
-    textAlign: "center",
+    textAlign: "left", // Align text to the left
   },
   logoutButton: {
     padding: 10,
