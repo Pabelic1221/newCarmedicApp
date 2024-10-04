@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { db } from "../../firebase";
 import { doc, updateDoc } from "firebase/firestore"; // Firestore update function
 import Ionicons from "react-native-vector-icons/Ionicons";
-
 export default function RequestTicket({ request, onClose }) {
   const [loading, setLoading] = useState(false);
 
