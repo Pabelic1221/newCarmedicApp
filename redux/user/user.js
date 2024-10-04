@@ -11,6 +11,11 @@ const userSlice = createSlice({
       state.currentUser = action.payload;
       return state;
     },
+    setUserData: (state, action) => {
+      Object.entries(action.payload).forEach(([key, value]) => {
+        state.currentUser[key] = value;
+      });
+    },
     resetUser: (state) => {
       Object.assign(state, initialState);
     },
