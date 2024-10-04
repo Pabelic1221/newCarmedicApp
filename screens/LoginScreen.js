@@ -40,7 +40,10 @@ const LoginScreen = () => {
         if (!user.emailVerified) {
           signOut(auth).then(() => {
             dispatch(actions.resetUser());
-            Alert.alert("Email not verified", "Please verify your email before logging in.");
+            Alert.alert(
+              "Email not verified",
+              "Please verify your email before logging in."
+            );
             navigation.replace("Login");
           });
         } else {
@@ -51,20 +54,23 @@ const LoginScreen = () => {
     });
 
     // AppState listener to track app background/foreground state
-    const appStateListener = AppState.addEventListener("change", (nextAppState) => {
-      if (nextAppState === "background" || nextAppState === "inactive") {
-        if (auth.currentUser) {
-          updateUserStatus(auth.currentUser.uid, "offline"); // Set status to 'offline' when app is in background or inactive
-        }
-      } else if (nextAppState === "active") {
-        if (auth.currentUser) {
-          updateUserStatus(auth.currentUser.uid, "online"); // Set status to 'online' when app comes to foreground
+    const appStateListener = AppState.addEventListener(
+      "change",
+      (nextAppState) => {
+        if (nextAppState === "background" || nextAppState === "inactive") {
+          if (auth.currentUser) {
+            updateUserStatus(auth.currentUser.uid, "offline"); // Set status to 'offline' when app is in background or inactive
+          }
+        } else if (nextAppState === "active") {
+          if (auth.currentUser) {
+            updateUserStatus(auth.currentUser.uid, "online"); // Set status to 'online' when app comes to foreground
+          }
         }
       }
-    });
+    );
 
     if (currentUser) {
-      navigation.replace("Main");
+      navigation.replace("Login");
     }
 
     return () => {
@@ -75,29 +81,38 @@ const LoginScreen = () => {
 
   const handleLogin = async () => {
     try {
-      const userCredentials = await signInWithEmailAndPassword(auth, email, password);
+      const userCredentials = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredentials.user;
-  
+      console.log("user logged in");
+
       if (user.emailVerified) {
         // Check first in the 'users' collection
         let userDocRef = doc(db, "users", user.uid);
         let userDoc = await getDoc(userDocRef);
-  
+
         if (!userDoc.exists()) {
           // If not found, check in the 'shops' collection
           userDocRef = doc(db, "shops", user.uid);
           userDoc = await getDoc(userDocRef);
         }
-  
+
         if (userDoc.exists()) {
           const userData = userDoc.data();
           console.log("User Data:", userData); // Log user data for debugging
-  
+
           // Handle verification logic based on user role
           if (userData.role === "User") {
             if (!userData.verified) {
-              Alert.alert("Account not verified", "Please verify your account before logging in.");
+              Alert.alert(
+                "Account not verified",
+                "Please verify your account before logging in."
+              );
               await signOut(auth); // Sign out if not verified
+              navigation.replace("Login");
               return; // Early exit
             }
           } else if (userData.role === "Shop") {
@@ -105,20 +120,27 @@ const LoginScreen = () => {
             // e.g., you can update shop-specific fields or do other actions.
             // Ensure that the shop is verified if required
             if (!userData.verified) {
-              Alert.alert("Shop account not verified", "Please verify your shop account before logging in.");
-              await signOut(auth); // Sign out if not verified
+              Alert.alert(
+                "Shop account not verified",
+                "Please verify your shop account before logging in."
+              );
+              await signOut(auth);
+              navigation.replace("Login"); // Sign out if not verified
               return; // Early exit
             }
           }
-  
+
           await updateUserStatus(user.uid, "online"); // Set status to 'online'
           console.log("Logged in with:", user.email);
-          navigation.replace("Main");
+          navigation.replace("Login");
         } else {
           Alert.alert("User not found", "No user data found in Firestore.");
         }
       } else {
-        Alert.alert("Email not verified", "Please verify your email before logging in.");
+        Alert.alert(
+          "Email not verified",
+          "Please verify your email before logging in."
+        );
         await signOut(auth); // Ensure sign out completes
       }
     } catch (error) {
@@ -126,8 +148,7 @@ const LoginScreen = () => {
       alert(error.message);
     }
   };
-  
-  
+
   const handleSignOut = async () => {
     if (auth.currentUser) {
       await updateUserStatus(auth.currentUser.uid, "offline"); // Update status to 'offline' on sign out
