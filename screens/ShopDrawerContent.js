@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,10 +12,30 @@ import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 import { actions } from "../redux/user/user";
 import { useDispatch } from "react-redux";
+import { db } from "../firebase"; // Firestore database instance
+import { doc, getDoc } from "firebase/firestore"; // Firestore functions
 
 const ShopDrawerContent = (props) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const [shopName, setShopName] = useState(""); // State to hold shopName
+
+  useEffect(() => {
+    // Fetch the shopName from Firestore
+    const fetchShopName = async () => {
+      try {
+        const shopDoc = await getDoc(doc(db, "shops", auth.currentUser.uid));
+        if (shopDoc.exists()) {
+          const shopData = shopDoc.data();
+          setShopName(shopData.shopName); // Set shopName from Firestore
+        }
+      } catch (error) {
+        console.error("Error fetching shopName: ", error);
+      }
+    };
+
+    fetchShopName();
+  }, []);
 
   const handleSignOut = () => {
     signOut(auth)
@@ -37,7 +57,8 @@ const ShopDrawerContent = (props) => {
           style={styles.userInfo}
           onPress={() => navigation.navigate("UserProfile")}
         >
-          <Text style={styles.email}>{auth.currentUser?.email}</Text>
+          {/* Replace email with shopName */}
+          <Text style={styles.shopName}>{shopName || "Shop Name"}</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.drawerItemsContainer}>
@@ -83,39 +104,37 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     backgroundColor: "#fff",
-    justifyContent: "center", // Centers items vertically
+    justifyContent: "center",
   },
   userInfo: {
-    marginBottom: 30,
+    marginBottom: 20,
     alignItems: "center",
   },
   profileImage: {
-    marginTop: 30,
+    marginTop: 50,
     width: 150,
     height: 150,
     borderRadius: 100,
     backgroundColor: "#ccc",
     marginBottom: 10,
   },
-  email: {
-    fontSize: 16,
-    color: "#808080",
+  shopName: {
+    fontSize: 20,
+    color: "#000000",
   },
   drawerItemsContainer: {
-    flex: 0, // Change to 1 If you Want Good Spacing
+    flex: 0,
     justifyContent: "center",
     marginHorizontal: 20,
   },
   drawerItem: {
     paddingVertical: 15,
-    alignItems: "flex-start", // Align items to the left
-    // borderBottomWidth: 1, // Removed separator lines
-    // borderBottomColor: "#ddd",
+    alignItems: "flex-start",
   },
   drawerItemText: {
-    fontSize: 21,
+    fontSize: 15,
     color: "#808080",
-    textAlign: "left", // Align text to the left
+    textAlign: "left",
   },
   logoutButton: {
     padding: 10,

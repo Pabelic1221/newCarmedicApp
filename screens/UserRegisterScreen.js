@@ -33,7 +33,6 @@ const UserRegisterScreen = ({ navigation }) => {
           email: email,
           address: address,
           role: "User",
-          verified: false
         });
 
         // Show alert and navigate back to LoginScreen

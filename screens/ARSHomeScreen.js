@@ -16,18 +16,26 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { useSelector, useDispatch } from "react-redux";
 import RequestTicket from "../components/modals/RequestTicket";
 import { MapComponent } from "../components/map/MapComponent";
-import { getAllRequests } from "../redux/requests/requestsActions";
+import { signOut } from "firebase/auth"; // Import signOut if needed
+import { firestore } from "../firebase"; // Import Firestore instance
+import { collection, onSnapshot } from "firebase/firestore"; // Import Firestore functions
 import EndTicket from "../components/modals/endTicketModal";
+
 const ARSHomeScreen = () => {
   const dispatch = useDispatch();
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [requests, setRequests] = useState([]); // Local state for requests
 
   useEffect(() => {
-    dispatch(getAllRequests());
-  }, [dispatch]);
+    const unsubscribe = onSnapshot(collection(firestore, "requests"), (snapshot) => {
+      const requestList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setRequests(requestList); // Update state with new requests
+    });
 
-  const requests = useSelector((state) => state.requests.requests);
+    // Cleanup function to unsubscribe from the listener when the component unmounts
+    return () => unsubscribe();
+  }, []);
 
   const handleRequestPress = (request) => {
     setSelectedRequest(request);
@@ -51,7 +59,7 @@ const ARSHomeScreen = () => {
               <Marker
                 key={request.id}
                 coordinate={{ longitude, latitude }}
-                title={request.firs}
+                title={request.firstName} // Fixed typo from 'firs' to 'firstName'
                 description={request.address}
                 pinColor="purple"
               />

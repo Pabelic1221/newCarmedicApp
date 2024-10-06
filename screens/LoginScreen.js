@@ -9,11 +9,11 @@ import {
   Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/core";
-import { auth, db } from "../firebase";
+import { auth } from "../firebase";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { getCurrentUser, updateUserStatus } from "../redux/user/userActions";
 import { useDispatch } from "react-redux";
+import { getCurrentUser, updateUserStatus } from "../redux/user/userActions";
+
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +28,7 @@ const LoginScreen = () => {
         password
       );
       const user = userCredentials.user;
-      console.log("user logged in");
+      console.log("User logged in");
       if (user.emailVerified) {
         dispatch(getCurrentUser());
         dispatch(updateUserStatus(user.uid, "online"));
@@ -46,19 +46,6 @@ const LoginScreen = () => {
       alert(error.message);
     }
   };
-  /**
- *
- * dunno what's the useof this
- * const handleSignOut = async () => {
-    if (auth.currentUser) {
-      await updateUserStatus(auth.currentUser.uid, "offline"); // Update status to 'offline' on sign out
-      await signOut(auth);
-      dispatch(actions.resetUser());
-      navigation.replace("Login");
-    }
-  };
-
- */
 
   const handleSignUpNavigation = () => {
     navigation.navigate("Register");
