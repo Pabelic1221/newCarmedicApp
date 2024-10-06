@@ -16,9 +16,8 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { useSelector, useDispatch } from "react-redux";
 import RequestTicket from "../components/modals/RequestTicket";
 import { MapComponent } from "../components/map/MapComponent";
-import { signOut } from "firebase/auth"; // Import signOut if needed
-import { firestore } from "../firebase"; // Import Firestore instance
-import { collection, onSnapshot } from "firebase/firestore"; // Import Firestore functions
+import { db } from "../firebase"; // Import Firestore instance
+import { collection, onSnapshot, doc, getDoc } from "firebase/firestore"; // Import Firestore functions
 import EndTicket from "../components/modals/endTicketModal";
 
 const ARSHomeScreen = () => {
@@ -28,9 +27,34 @@ const ARSHomeScreen = () => {
   const [requests, setRequests] = useState([]); // Local state for requests
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(firestore, "requests"), (snapshot) => {
-      const requestList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setRequests(requestList); // Update state with new requests
+    const unsubscribe = onSnapshot(collection(db, "requests"), async (snapshot) => {
+      const requestList = await Promise.all(
+        snapshot.docs.map(async (requestDoc) => {
+          const requestData = { id: requestDoc.id, ...requestDoc.data() };
+
+          // Fetch user data using userId from the request
+          const userRef = doc(db, "users", requestData.userId);
+          const userSnap = await getDoc(userRef);
+
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            return {
+              ...requestData,
+              firstName: userData.firstName,
+              lastName: userData.lastName,
+            };
+          } else {
+            // Handle the case where the user document doesn't exist
+            return {
+              ...requestData,
+              firstName: "Unknown",
+              lastName: "User",
+            };
+          }
+        })
+      );
+
+      setRequests(requestList); // Update state with requests and user names
     });
 
     // Cleanup function to unsubscribe from the listener when the component unmounts
@@ -59,7 +83,7 @@ const ARSHomeScreen = () => {
               <Marker
                 key={request.id}
                 coordinate={{ longitude, latitude }}
-                title={request.firstName} // Fixed typo from 'firs' to 'firstName'
+                title={request.firstName} // Now correctly fetching firstName
                 description={request.address}
                 pinColor="purple"
               />

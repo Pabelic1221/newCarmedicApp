@@ -8,11 +8,10 @@ import {
   Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { auth } from "../firebase";
+import { auth , db } from "../firebase";
 import { signOut } from "firebase/auth";
 import { actions } from "../redux/user/user";
 import { useDispatch } from "react-redux";
-import { db } from "../firebase"; // Firestore database instance
 import { doc, getDoc } from "firebase/firestore"; // Firestore functions
 
 const ShopDrawerContent = (props) => {
@@ -40,7 +39,7 @@ const ShopDrawerContent = (props) => {
   const handleSignOut = () => {
     signOut(auth)
       .then(() => {
-        dispatch(actions.resetUser());
+        dispatch(actions.resetUser()); // Reset user state in Redux
         navigation.replace("Login");
       })
       .catch((error) => alert(error.message));

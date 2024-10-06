@@ -8,7 +8,7 @@ import {
   Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { auth, db } from "../firebase"; // Ensure you have db imported
+import { auth , db } from "../firebase"; // Ensure you have db imported
 import { signOut } from "firebase/auth";
 import { actions } from "../redux/user/user";
 import { useDispatch } from "react-redux";
@@ -39,7 +39,7 @@ const DrawerContent = (props) => {
   const handleSignOut = () => {
     signOut(auth)
       .then(() => {
-        dispatch(actions.resetUser());
+        dispatch(actions.resetUser()); // Reset user state in Redux
         navigation.replace("Login");
       })
       .catch((error) => alert(error.message));
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: "#000000",
   },
-  userInfoButton: { // New style for the combined button
+  userInfoButton: {
     alignItems: "center",
     justifyContent: "center",
   },
