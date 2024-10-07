@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
   StyleSheet,
@@ -17,8 +17,7 @@ import {
 import { auth, db } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
 import Icon from "react-native-vector-icons/Ionicons";
-import MapView, { Marker } from "react-native-maps";
-import { useSelector } from "react-redux";
+import { Marker } from "react-native-maps";
 import { getAddressFromCoordinates } from "../helpers/maps/getAddress";
 
 const ShopRegisterScreen = ({ navigation }) => {
@@ -55,7 +54,6 @@ const ShopRegisterScreen = ({ navigation }) => {
         await sendEmailVerification(user);
 
         // Add shop to Firestore
-
         await setDoc(doc(db, "shops", user.uid), {
           shopName: shopName,
           email: email,
@@ -96,19 +94,27 @@ const ShopRegisterScreen = ({ navigation }) => {
             value={shopName}
             onChangeText={setShopName}
             placeholder="Shop Name"
+            returnKeyType="next"
+            onSubmitEditing={() => this.emailInput.focus()} // Move focus to email input
           />
           <TextInput
+            ref={(input) => (this.emailInput = input)} // Set reference for email input
             style={styles.input}
             value={email}
             onChangeText={setEmail}
             placeholder="Email"
             autoCapitalize="none"
+            returnKeyType="next"
+            onSubmitEditing={() => this.addressInput.focus()} // Move focus to address input
           />
           <TextInput
+            ref={(input) => (this.addressInput = input)} // Set reference for address input
             style={styles.input}
             value={address}
             onChangeText={setAddress}
             placeholder="Address"
+            returnKeyType="next"
+            onSubmitEditing={() => this.passwordInput.focus()} // Move focus to password input
           />
           <MapComponent onPress={handleMapPress}>
             {markerLocation && (
@@ -120,18 +126,24 @@ const ShopRegisterScreen = ({ navigation }) => {
             )}
           </MapComponent>
           <TextInput
+            ref={(input) => (this.passwordInput = input)} // Set reference for password input
             style={styles.input}
             value={password}
             onChangeText={setPassword}
             placeholder="Password"
             secureTextEntry
+            returnKeyType="next"
+            onSubmitEditing={() => this.confirmPasswordInput.focus()} // Move focus to confirm password input
           />
           <TextInput
+            ref={(input) => (this.confirmPasswordInput = input)} // Set reference for confirm password input
             style={styles.input}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             placeholder="Confirm Password"
             secureTextEntry
+            returnKeyType="done"
+            onSubmitEditing={handleSignUp} // Trigger signup
           />
         </View>
 
@@ -159,7 +171,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 20,
   },
-
   appBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -192,7 +203,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     backgroundColor: "#fff",
   },
-
   registerButton: {
     height: 50,
     backgroundColor: "#000",
