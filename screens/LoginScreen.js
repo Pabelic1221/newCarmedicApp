@@ -13,7 +13,7 @@ import { auth, db } from "../firebase";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { getCurrentUser, updateUserStatus } from "../redux/user/userActions";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -63,6 +63,12 @@ const LoginScreen = () => {
   const handleSignUpNavigation = () => {
     navigation.navigate("Register");
   };
+  const { currentUser } = useSelector((state) => state.user);
+  useEffect(() => {
+    if (currentUser) {
+      navigation.navigate("Main");
+    }
+  }, []);
 
   return (
     <View style={styles.container}>

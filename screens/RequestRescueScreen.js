@@ -6,34 +6,77 @@ import {
   Image,
   FlatList,
   TouchableOpacity,
-  Modal,
-  ScrollView,
 } from "react-native";
 import AppBar from "./AppBar"; // Import AppBar component
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Marker } from "react-native-maps";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useSelector, useDispatch } from "react-redux";
 import { getAllShops } from "../redux/shops/shopsActions";
 import { MapComponent } from "../components/map/MapComponent";
 import { useNavigation } from "@react-navigation/native";
+
 const RequestRescueScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [selectedShop, setSelectedShop] = useState(null);
-  const handleShopPress = (shop) => {
-    setSelectedShop(shop);
-  };
+  const flatListRef = useRef(null); // Reference to the FlatList
 
+  // Fetch all shops when the component is mounted
   useEffect(() => {
     dispatch(getAllShops());
   }, [dispatch]);
 
   const shops = useSelector((state) => state.shops.shops);
 
+  // Handle marker press event
+  const handleMarkerPress = (shop) => {
+    setSelectedShop(shop); // Set the selected shop
+
+    // Find the index of the selected shop in the shops array
+    const index = shops.findIndex((s) => s.id === shop.id);
+
+    // Scroll to the corresponding index in the FlatList
+    if (flatListRef.current && index !== -1) {
+      flatListRef.current.scrollToIndex({ index, animated: true });
+    }
+  };
+
+  // Render each shop item
+  const renderItem = ({ item }) => (
+    <View style={styles.shopItem}>
+      <View style={styles.shopInfo}>
+        <Image
+          source={{ uri: "https://via.placeholder.com/50" }}
+          style={styles.shopImage}
+        />
+        <View style={styles.shopDetails}>
+          <Text style={styles.shopName}>{item.shopName}</Text>
+          <Text style={styles.shopAddress}>{item.address}</Text>
+          <View style={styles.ratingContainer}>
+            <Ionicons name="star" size={18} color="#FFD700" />
+            <Text style={styles.shopRating}>
+              {item.rating ?? 0.0} ({item.reviews ?? 0} reviews)
+            </Text>
+          </View>
+        </View>
+      </View>
+      <TouchableOpacity
+        style={styles.navigateButton}
+        onPress={() => {
+          navigation.navigate("Auto Repair Shop", { item });
+        }}
+      >
+        <Ionicons name="arrow-forward" size={24} color="#000" />
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <AppBar />
+
+      {/* Map with markers for shops */}
       <MapComponent>
         {shops.map((shop) => {
           const { longitude, latitude } = shop;
@@ -45,48 +88,21 @@ const RequestRescueScreen = () => {
                 title={shop.shopName}
                 description={shop.address}
                 pinColor="purple"
+                onPress={() => handleMarkerPress(shop)} // Handle marker press
               />
             );
           }
           return null;
         })}
       </MapComponent>
+
+      {/* FlatList showing shops */}
       <FlatList
+        ref={flatListRef} // Attach ref to FlatList
         style={styles.shopList}
         data={shops}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.shopItem}>
-            <View style={styles.shopInfo}>
-              <Image
-                source={{ uri: "https://via.placeholder.com/50" }}
-                style={styles.shopImage}
-              />
-              <View style={styles.shopDetails}>
-                <Text style={styles.shopName}>{item.shopName}</Text>
-                {/*need to style overflow*/}
-                <Text style={styles.shopAddress}>{item.address}</Text>
-                <View style={styles.ratingContainer}>
-                  <Ionicons name="star" size={18} color="#FFD700" />
-
-                  <Text style={styles.shopRating}>
-                    {item.rating ?? 0.0} ({item.reviews ?? 0} reviews)
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <TouchableOpacity
-              style={styles.navigateButton}
-              onPress={() => {
-                navigation.navigate("Auto Repair Shop", {
-                  item,
-                });
-              }}
-            >
-              <Ionicons name="arrow-forward" size={24} color="#000" />
-            </TouchableOpacity>
-          </View>
-        )}
+        renderItem={renderItem}
       />
     </SafeAreaView>
   );
@@ -150,18 +166,5 @@ const styles = StyleSheet.create({
   },
   shopList: {
     margin: 15,
-  },
-  modalBackground: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Dark background with opacity
-  },
-  modalContent: {
-    height: "70%",
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    overflow: "scroll",
   },
 });

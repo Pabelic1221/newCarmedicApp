@@ -20,11 +20,6 @@ const TicketListener = ({ children }) => {
     const auth = getAuth();
     const currentUser = auth.currentUser; // Get current authenticated user
 
-    if (!currentUser) {
-      console.error("User not authenticated");
-      return;
-    }
-
     const storeId = currentUser.uid; // Use the current user's UID as storeId
 
     const colRef = collection(db, "requests");
