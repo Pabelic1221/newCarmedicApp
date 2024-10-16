@@ -4,7 +4,7 @@ import {
   Text,
   TextInput,
   StyleSheet,
- TouchableOpacity,
+  TouchableOpacity,
   Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";

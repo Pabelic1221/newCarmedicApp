@@ -14,7 +14,7 @@ import ShopDrawerContent from "./screens/ShopDrawerContent"; // Import ShopDrawe
 import UserProfile from "./screens/UserProfile";
 import ARSHomeScreen from "./screens/ARSHomeScreen";
 import ShopListScreen from "./screens/ShopListScreen";
-
+import TicketListener from "./components/map/Shops/TicketListener";
 const Drawer = createDrawerNavigator();
 
 function DrawerNavigator() {
@@ -44,7 +44,15 @@ function DrawerNavigator() {
       {/* Conditionally load screens based on the user's role */}
       <Drawer.Screen
         name="Home"
-        component={currentUser?.role === "Shop" ? ARSHomeScreen : HomeScreen}
+        component={
+          currentUser?.role === "Shop"
+            ? () => (
+                <TicketListener>
+                  <ARSHomeScreen />
+                </TicketListener>
+              )
+            : HomeScreen
+        }
       />
       {currentUser?.role !== "Shop" && (
         <Drawer.Screen name="Request" component={RequestRescueScreen} />

@@ -111,23 +111,21 @@ const ARSHomeScreen = () => {
         transparent={true}
         animationType="slide"
       >
-        <ScrollView>
-          {/* Render modal content only if a request is selected */}
-          {selectedRequest ? (
-            selectedRequest.state === "accepted" ? (
-              <EndTicket request={selectedRequest} onClose={handleCloseModal} />
-            ) : (
-              <RequestTicket
-                request={selectedRequest}
-                onClose={handleCloseModal}
-              />
-            )
+        {/* Render modal content only if a request is selected */}
+        {selectedRequest ? (
+          selectedRequest.state === "accepted" ? (
+            <EndTicket request={selectedRequest} onClose={handleCloseModal} />
           ) : (
-            <View>
-              <Text>No request selected</Text>
-            </View>
-          )}
-        </ScrollView>
+            <RequestTicket
+              request={selectedRequest}
+              onClose={handleCloseModal}
+            />
+          )
+        ) : (
+          <View>
+            <Text>No request selected</Text>
+          </View>
+        )}
       </Modal>
     </SafeAreaView>
   );

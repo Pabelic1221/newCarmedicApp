@@ -34,37 +34,35 @@ export default function App() {
       >
         <GeoLocator>
           <SessionChecker>
-            <TicketListener>
-              <NavigationContainer>
-                <Stack.Navigator
-                  screenOptions={{
-                    headerShown: false, // Hide headers for stack screens
-                  }}
-                >
-                  {/* Authentication Stack */}
-                  <Stack.Screen name="Login" component={LoginScreen} />
-                  <Stack.Screen name="Register" component={RegisterScreen} />
-                  <Stack.Screen
-                    name="UserRegister"
-                    component={UserRegisterScreen}
-                  />
-                  <Stack.Screen
-                    name="ShopRegister"
-                    component={ShopRegisterScreen}
-                  />
+            <NavigationContainer>
+              <Stack.Navigator
+                screenOptions={{
+                  headerShown: false, // Hide headers for stack screens
+                }}
+              >
+                {/* Authentication Stack */}
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="Register" component={RegisterScreen} />
+                <Stack.Screen
+                  name="UserRegister"
+                  component={UserRegisterScreen}
+                />
+                <Stack.Screen
+                  name="ShopRegister"
+                  component={ShopRegisterScreen}
+                />
 
-                  {/* Main App Navigation */}
-                  <Stack.Screen name="Main" component={DrawerNavigator} />
+                {/* Main App Navigation */}
+                <Stack.Screen name="Main" component={DrawerNavigator} />
 
-                  {/* User Profile Screen */}
-                  <Stack.Screen name="UserProfile" component={UserProfile} />
+                {/* User Profile Screen */}
+                <Stack.Screen name="UserProfile" component={UserProfile} />
 
-                  {/* Chat Screen */}
-                  <Stack.Screen name="ChatScreen" component={ChatScreen} />
-                  <Stack.Screen name="ChatList" component={ChatList} />
-                </Stack.Navigator>
-              </NavigationContainer>
-            </TicketListener>
+                {/* Chat Screen */}
+                <Stack.Screen name="ChatScreen" component={ChatScreen} />
+                <Stack.Screen name="ChatList" component={ChatList} />
+              </Stack.Navigator>
+            </NavigationContainer>
           </SessionChecker>
         </GeoLocator>
       </PersistGate>

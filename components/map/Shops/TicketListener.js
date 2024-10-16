@@ -20,7 +20,7 @@ const TicketListener = ({ children }) => {
     const auth = getAuth();
     const currentUser = auth.currentUser; // Get current authenticated user
 
-    const storeId = currentUser.uid; // Use the current user's UID as storeId
+    const storeId = currentUser?.uid; // Use the current user's UID as storeId
 
     const colRef = collection(db, "requests");
 

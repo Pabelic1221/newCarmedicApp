@@ -1,37 +1,75 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { db } from "../../firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import MapView from "react-native-maps";
-import MapViewDirections from "react-native-maps-directions"; // To show the path
+import MapView, { Polyline, Marker } from "react-native-maps";
 import { useSelector } from "react-redux";
+import axios from "axios";
 import Constants from "expo-constants";
+
 const GOOGLE_MAPS_API_KEY = Constants.expoConfig.extra.googleMapsApiKey;
 
 export default function RequestTicket({ request, onClose }) {
   const [loading, setLoading] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false); // Track if the navigation has started
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
 
-  // Fetch current user location from Redux (assuming you're using it)
+  // Fetch current user location from Redux
   const userLocation = useSelector(
     (state) => state.userLocation.currentLocation
   );
 
-  // Start navigation, but don't update the status in Firestore yet
-  const handleAcceptRequest = () => {
-    setIsNavigating(true); // Start navigation
-    console.log("Navigation started. Status not yet updated.");
+  // Function to fetch the route from OSRM
+  const fetchRouteFromOSRM = async (origin, destination) => {
+    const start = `${origin.longitude},${origin.latitude}`;
+    const end = `${destination.longitude},${destination.latitude}`;
+    const url = `https://router.project-osrm.org/route/v1/driving/${start};${end}?overview=full&geometries=geojson`;
+
+    try {
+      const response = await axios.get(url);
+      const route = response.data.routes[0].geometry.coordinates;
+
+      // Convert OSRM response [longitude, latitude] into Google Maps format {latitude, longitude}
+      const coordinates = route.map(([lon, lat]) => ({
+        latitude: lat,
+        longitude: lon,
+      }));
+
+      setRouteCoordinates(coordinates);
+    } catch (error) {
+      console.error("Error fetching route:", error);
+    }
   };
 
-  // Cancel navigation and revert to pending status
+  // Start navigation
+  const handleAcceptRequest = () => {
+    setIsNavigating(true);
+    const destination = {
+      latitude: request.latitude,
+      longitude: request.longitude,
+    };
+    fetchRouteFromOSRM(userLocation, destination);
+  };
+
+  // Re-fetch route when userLocation changes
+  useEffect(() => {
+    if (isNavigating && userLocation) {
+      const destination = {
+        latitude: request.latitude,
+        longitude: request.longitude,
+      };
+      fetchRouteFromOSRM(userLocation, destination);
+    }
+  }, [userLocation, isNavigating]);
+
+  // Cancel navigation
   const handleCancelNavigation = async () => {
     setLoading(true);
     try {
       const requestDocRef = doc(db, "requests", request.id);
-      await updateDoc(requestDocRef, { state: "pending" }); // Revert to pending
-      setIsNavigating(false); // Stop navigation
-      console.log("Navigation canceled and request reverted to pending");
+      await updateDoc(requestDocRef, { state: "pending" });
+      setIsNavigating(false);
     } catch (error) {
       console.error(`Error updating request: ${error}`);
     } finally {
@@ -39,15 +77,14 @@ export default function RequestTicket({ request, onClose }) {
     }
   };
 
-  // End navigation and then mark the request as accepted in Firestore
+  // End navigation
   const handleEndNavigation = async () => {
     setLoading(true);
     try {
       const requestDocRef = doc(db, "requests", request.id);
-      await updateDoc(requestDocRef, { state: "accepted" }); // Mark as accepted
-      setIsNavigating(false); // Stop navigation
-      console.log("Navigation ended and request accepted");
-      onClose(); // Close the modal after finishing navigation and updating status
+      await updateDoc(requestDocRef, { state: "accepted" });
+      setIsNavigating(false);
+      onClose();
     } catch (error) {
       console.error(`Error updating request: ${error}`);
     } finally {
@@ -55,14 +92,13 @@ export default function RequestTicket({ request, onClose }) {
     }
   };
 
-  // Decline the request and update its state to 'declined' in Firestore
+  // Decline the request
   const handleDeclineRequest = async () => {
     setLoading(true);
     try {
       const requestDocRef = doc(db, "requests", request.id);
-      await updateDoc(requestDocRef, { state: "declined" }); // Set status to declined
-      console.log("Request declined");
-      onClose(); // Close the modal after declining
+      await updateDoc(requestDocRef, { state: "declined" });
+      onClose();
     } catch (error) {
       console.error(`Error declining request: ${error}`);
     } finally {
@@ -71,7 +107,12 @@ export default function RequestTicket({ request, onClose }) {
   };
 
   return (
-    <Modal visible={true} transparent animationType="slide">
+    <Modal
+      visible={true}
+      onRequestClose={onClose}
+      transparent={true}
+      animationType="slide"
+    >
       <View style={styles.modalBackground}>
         <View style={styles.modalContainer}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -79,23 +120,13 @@ export default function RequestTicket({ request, onClose }) {
           </TouchableOpacity>
 
           <Text style={styles.modalHeader}>Request Ticket</Text>
-
           <Text style={styles.label}>
-            Name:{" "}
-            <Text style={styles.value}>
-              {request.firstname} {request.lastname}
-            </Text>
+            Name: {request.firstname} {request.lastname}
           </Text>
           <Text style={styles.label}>
-            Car:{" "}
-            <Text style={styles.value}>
-              {request.carBrand} {request.carModel}
-            </Text>
+            Car: {request.carBrand} {request.carModel}
           </Text>
-          <Text style={styles.label}>
-            Concern:{" "}
-            <Text style={styles.problemBadge}>{request.specificProblem}</Text>
-          </Text>
+          <Text style={styles.label}>Concern: {request.specificProblem}</Text>
 
           {!isNavigating ? (
             <View style={styles.buttonContainer}>
@@ -108,7 +139,7 @@ export default function RequestTicket({ request, onClose }) {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.declineButton}
-                onPress={handleDeclineRequest} // Decline request
+                onPress={handleDeclineRequest}
                 disabled={loading}
               >
                 <Text style={styles.declineButtonText}>Decline</Text>
@@ -124,21 +155,25 @@ export default function RequestTicket({ request, onClose }) {
                   latitudeDelta: 0.0922,
                   longitudeDelta: 0.0421,
                 }}
+                showsUserLocation={true}
               >
-                {/* Show directions from current location to request location */}
-                <MapViewDirections
-                  origin={userLocation}
-                  destination={{
+                <Marker
+                  coordinate={{
                     latitude: request.latitude,
                     longitude: request.longitude,
                   }}
-                  apikey={GOOGLE_MAPS_API_KEY}
-                  strokeWidth={3}
-                  strokeColor="blue"
+                  title="Destination"
                 />
+
+                {routeCoordinates.length > 0 && (
+                  <Polyline
+                    coordinates={routeCoordinates}
+                    strokeColor="blue"
+                    strokeWidth={3}
+                  />
+                )}
               </MapView>
 
-              {/* Cancel/End Navigation Buttons */}
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
                   style={styles.declineButton}
