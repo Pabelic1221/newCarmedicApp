@@ -8,33 +8,84 @@ import {
   ScrollView,
   Modal,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRoute, useNavigation } from "@react-navigation/native";
+import { useSelector } from "react-redux"; // Assuming you're using Redux for user location
 import RequestForm from "../components/modals/RequestForm";
 import ShopAppBar from "./ShopAppBar";
+
+// Haversine formula to calculate distance in kilometers between two coordinates
+const haversineDistance = (lat1, lon1, lat2, lon2) => {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const R = 6371; // Radius of the Earth in km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
+};
 
 const AutoRepairShopsScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const [isModalVisible, setModalVisible] = useState(false);
 
+  const shop = route.params.item;
+
+  // Getting user's current location from Redux
+  const { latitude, longitude } = useSelector(
+    (state) => state.userLocation.currentLocation
+  );
+
   const handleOpenRequestModal = () => {
-    setModalVisible(true);
+    const distance = haversineDistance(
+      latitude,
+      longitude,
+      shop.latitude,
+      shop.longitude
+    );
+
+    if (distance > 10) {
+      // Trigger alert if the distance is more than 10 km
+      Alert.alert(
+        "Shop may be too far",
+        `The shop is ${distance.toFixed(
+          2
+        )} km away. They may likely decline your request.`,
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+            onPress: handleCloseRequestModal,
+          },
+          {
+            text: "Proceed",
+            onPress: () => setModalVisible(true), // Show modal if user proceeds
+          },
+        ]
+      );
+    } else {
+      setModalVisible(true); // Directly open modal if within 10 km
+    }
   };
 
   const handleCloseRequestModal = () => {
     setModalVisible(false);
   };
 
-  const shop = route.params.item;
-
   useEffect(() => {
     console.log(route.params);
   });
 
   const handleChatPress = () => {
-    navigation.navigate('ChatScreen', { shopId: shop.id }); // Assuming each shop has a unique id
+    navigation.navigate("ChatScreen", { shopId: shop.id }); // Assuming each shop has a unique id
   };
 
   return (
@@ -56,7 +107,7 @@ const AutoRepairShopsScreen = () => {
             </Text>
           </View>
         </View>
-        {/* Rest of the component code */}
+
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.chatButton} onPress={handleChatPress}>
             <Text style={styles.chatButtonText}>Chat</Text>

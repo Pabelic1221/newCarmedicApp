@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { getCurrentUser, updateUserStatus } from "../../redux/user/userActions";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../../firebase";
-
+import { useNavigation } from "@react-navigation/core";
 export default function SessionChecker({ children }) {
   const dispatch = useDispatch();
 

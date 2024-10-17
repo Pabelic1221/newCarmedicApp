@@ -7,6 +7,7 @@ import {
   View,
   Image,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/core";
 import { auth } from "../firebase";
@@ -17,10 +18,36 @@ import { getCurrentUser, updateUserStatus } from "../redux/user/userActions";
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(true); // New state for loading
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
+  // Check if a user is already logged in when the app loads
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        if (user.emailVerified) {
+          dispatch(getCurrentUser());
+          dispatch(updateUserStatus(user.uid, "online"));
+          console.log("User is already logged in with:", user.email);
+          navigation.replace("Main");
+        } else {
+          Alert.alert(
+            "Email not verified",
+            "Please verify your email before logging in."
+          );
+          signOut(auth); // Ensure sign out completes
+        }
+      }
+      setLoading(false); // Stop loading once user state is checked
+    });
+
+    // Cleanup subscription
+    return unsubscribe;
+  }, []);
+
   const handleLogin = async () => {
+    setLoading(true); // Show loading when login is in progress
     try {
       const userCredentials = await signInWithEmailAndPassword(
         auth,
@@ -44,12 +71,22 @@ const LoginScreen = () => {
     } catch (error) {
       console.error("Login error:", error.message);
       alert(error.message);
+    } finally {
+      setLoading(false); // Hide loading after login process
     }
   };
 
   const handleSignUpNavigation = () => {
     navigation.navigate("Register");
   };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#000" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
