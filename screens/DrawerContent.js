@@ -8,7 +8,7 @@ import {
   Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { auth, firestore } from "../firebase"; // Ensure you have firestore imported
+import { auth , db } from "../firebase"; // Ensure you have db imported
 import { signOut } from "firebase/auth";
 import { actions } from "../redux/user/user";
 import { useDispatch } from "react-redux";
@@ -17,27 +17,29 @@ import { doc, getDoc } from "firebase/firestore"; // Import Firestore methods
 const DrawerContent = (props) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const [userData, setUserData] = useState({ firstName: "", lastName: "" });
+  const [firstName, setFirstName] = useState(""); // State for first name
+  const [lastName, setLastName] = useState(""); // State for last name
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchUserNames = async () => {
       const userId = auth.currentUser?.uid; // Get the current user ID
       if (userId) {
-        const userDoc = doc(firestore, "users", userId); // Adjust the collection name if necessary
+        const userDoc = doc(db, "users", userId); // Adjust the collection name if necessary
         const userSnapshot = await getDoc(userDoc);
         if (userSnapshot.exists()) {
           const data = userSnapshot.data();
-          setUserData({ firstName: data.firstName, lastName: data.lastName });
+          setFirstName(data.firstName); // Set the first name from Firestore
+          setLastName(data.lastName); // Set the last name from Firestore
         }
       }
     };
-    fetchUserData();
+    fetchUserNames();
   }, []);
 
   const handleSignOut = () => {
     signOut(auth)
       .then(() => {
-        dispatch(actions.resetUser());
+        dispatch(actions.resetUser()); // Reset user state in Redux
         navigation.replace("Login");
       })
       .catch((error) => alert(error.message));
@@ -51,11 +53,12 @@ const DrawerContent = (props) => {
           style={styles.profileImage}
         />
         <TouchableOpacity
-          style={styles.userInfo}
+          style={styles.userInfoButton} // Changed to userInfoButton style
           onPress={() => navigation.navigate("UserProfile")}
         >
+          {/* Display both first name and last name in one button */}
           <Text style={styles.userName}>
-            {userData.firstName} {userData.lastName}
+            {firstName} {lastName} {/* Concatenate first and last name */}
           </Text>
         </TouchableOpacity>
       </View>
@@ -105,7 +108,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   userInfo: {
-    marginBottom: 30,
+    marginBottom: 20,
     alignItems: "center",
   },
   profileImage: {
@@ -117,8 +120,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   userName: {
-    fontSize: 18,
-    color: "#808080",
+    fontSize: 20,
+    color: "#000000",
+  },
+  userInfoButton: {
+    alignItems: "center",
+    justifyContent: "center",
   },
   drawerItemsContainer: {
     flex: 0,
@@ -130,7 +137,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   drawerItemText: {
-    fontSize: 21,
+    fontSize: 15,
     color: "#808080",
     textAlign: "left",
   },

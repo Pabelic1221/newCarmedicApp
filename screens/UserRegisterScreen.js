@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert } from 'react-native';
+import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, ScrollView, Platform } from 'react-native';
 import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
@@ -12,38 +12,38 @@ const UserRegisterScreen = ({ navigation }) => {
   const [address, setAddress] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
-  const handleSignUp = () => {
+
+  const handleSignUp = async () => {
     if (password !== confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
 
-    createUserWithEmailAndPassword(auth, email, password)
-      .then(async (userCredentials) => {
-        const user = userCredentials.user;
+    try {
+      const userCredentials = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredentials.user;
 
-        // Send verification email
-        await sendEmailVerification(user);
+      // Send verification email
+      await sendEmailVerification(user);
 
-        // Add user to Firestore
-        await setDoc(doc(db, "users", user.uid), {
-          firstName: firstName,
-          lastName: lastName,
-          email: email,
-          address: address,
-          role: "User",
-          verified: false
-        });
+      // Add user to Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        firstName,
+        lastName,
+        email,
+        address,
+        role: "User",
+      });
 
-        // Show alert and navigate back to LoginScreen
-        Alert.alert(
-          "Registration Successful",
-          "Verification email sent! Please verify your account before logging in.",
-          [{ text: "OK", onPress: () => navigation.replace("Login") }]
-        );
-      })
-      .catch(error => alert(error.message));
+      // Show alert and navigate back to LoginScreen
+      Alert.alert(
+        "Registration Successful",
+        "Verification email sent! Please verify your account before logging in.",
+        [{ text: "OK", onPress: () => navigation.replace("Login") }]
+      );
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   const goBack = () => {
@@ -53,69 +53,72 @@ const UserRegisterScreen = ({ navigation }) => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior="padding"
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}  // Offset to prevent overlap
     >
-      <View style={styles.appBar}>
-        <TouchableOpacity onPress={goBack} style={styles.backButton}>
-        <Icon name="arrow-back" size={24} color="#000" />
+      <ScrollView contentContainerStyle={styles.scrollView}>
+        <View style={styles.appBar}>
+          <TouchableOpacity onPress={goBack} style={styles.backButton}>
+            <Icon name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.appBarTitle}>Register Vehicle Owner</Text>
+        </View>
+
+        <View style={styles.uploadContainer}>
+          <Text style={styles.uploadLabel}>Profile Image</Text>
+          <TouchableOpacity style={styles.uploadButton}>
+            <Text style={styles.uploadButtonText}>Choose File</Text>
+            <Text style={styles.noFileText}>No File chosen</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TextInput
+          style={styles.input}
+          value={firstName}
+          onChangeText={setFirstName}
+          placeholder="First Name"
+        />
+        <TextInput
+          style={styles.input}
+          value={lastName}
+          onChangeText={setLastName}
+          placeholder="Last Name"
+        />
+        <TextInput
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          placeholder="Email"
+          autoCapitalize="none"
+        />
+        <TextInput
+          style={styles.input}
+          value={address}
+          onChangeText={setAddress}
+          placeholder="Address"
+        />
+        <TextInput
+          style={styles.input}
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Password"
+          secureTextEntry
+        />
+        <TextInput
+          style={styles.input}
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          placeholder="Confirm Password"
+          secureTextEntry
+        />
+
+        <TouchableOpacity style={styles.registerButton} onPress={handleSignUp}>
+          <Text style={styles.registerButtonText}>Register</Text>
         </TouchableOpacity>
-        <Text style={styles.appBarTitle}>Register Vehicle Owner</Text>
-      </View>
-
-      <View style={styles.uploadContainer}>
-        <Text style={styles.uploadLabel}>Profile Image</Text>
-        <TouchableOpacity style={styles.uploadButton}>
-          <Text style={styles.uploadButtonText}>Choose File</Text>
-          <Text style={styles.noFileText}>No File chosen</Text>
+        <TouchableOpacity onPress={goBack}>
+          <Text style={styles.signInText}>Already have an account? Sign in</Text>
         </TouchableOpacity>
-      </View>
-
-      <TextInput
-        style={styles.input}
-        value={firstName}
-        onChangeText={setFirstName}
-        placeholder="First Name"
-      />
-      <TextInput
-        style={styles.input}
-        value={lastName}
-        onChangeText={setLastName}
-        placeholder="Last Name"
-      />
-      <TextInput
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        placeholder="Email"
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        value={address}
-        onChangeText={setAddress}
-        placeholder="Address"
-      />
-      <TextInput
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
-        placeholder="Password"
-        secureTextEntry
-      />
-      <TextInput
-        style={styles.input}
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        placeholder="Confirm Password"
-        secureTextEntry
-      />
-
-      <TouchableOpacity style={styles.registerButton} onPress={handleSignUp}>
-        <Text style={styles.registerButtonText}>Register</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={goBack}>
-        <Text style={styles.signInText}>Already have an account? Sign in</Text>
-      </TouchableOpacity>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -125,8 +128,11 @@ export default UserRegisterScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: '#f8f8f8',
+  },
+  scrollView: {
+    flexGrow: 1,
+    padding: 20,
   },
   appBar: {
     flexDirection: 'row',
@@ -140,10 +146,6 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     left: 10,
-  },
-  backText: {
-    fontSize: 18,
-    color: '#000',
   },
   appBarTitle: {
     fontSize: 20,
