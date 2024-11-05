@@ -14,7 +14,10 @@ import ShopDrawerContent from "./screens/ShopDrawerContent"; // Import ShopDrawe
 import UserProfile from "./screens/UserProfile";
 import ARSHomeScreen from "./screens/ARSHomeScreen";
 import ShopListScreen from "./screens/ShopListScreen";
+import AppBar from "./screens/AppBar";
 import TicketListener from "./components/map/Shops/TicketListener";
+import Chat from "./screens/ChatScreen";
+import ChatList from "./components/chat/ChatList";
 const Drawer = createDrawerNavigator();
 
 function DrawerNavigator() {
@@ -61,7 +64,10 @@ function DrawerNavigator() {
       <Drawer.Screen name="Reviews" component={ReviewsScreen} />
       <Drawer.Screen name="Auto Repair Shop" component={AutoRepairShopScreen} />
       <Drawer.Screen name="Feedback" component={FeedbackScreen} />
+      <Drawer.Screen name="Chat Screen" component={Chat} />
+      <Drawer.Screen name="Chat List" component={ChatList} />
       <Drawer.Screen name="Profile" component={UserProfile} />
+      <Drawer.Screen name="AppBar" component={AppBar} />
     </Drawer.Navigator>
   );
 }

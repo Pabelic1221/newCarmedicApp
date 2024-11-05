@@ -21,8 +21,7 @@ const ShopAppBar = () => {
           <Ionicons name="menu" size={30} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.appTitle}>CarMedic</Text>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('ChatList')}>
+        <TouchableOpacity onPress={() => navigation.navigate("ChatList")}>
           <Ionicons name="chatbubble-outline" size={30} color="#fff" />
         </TouchableOpacity>
       </View>
