@@ -8,11 +8,12 @@ import {
   Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { auth , db } from "../firebase";
+import { auth, db } from "../firebase";
 import { signOut } from "firebase/auth";
 import { actions } from "../redux/user/user";
 import { useDispatch } from "react-redux";
 import { doc, getDoc } from "firebase/firestore"; // Firestore functions
+import { updateUserStatus } from "../redux/user/userActions";
 
 const ShopDrawerContent = (props) => {
   const navigation = useNavigation();
@@ -37,6 +38,7 @@ const ShopDrawerContent = (props) => {
   }, []);
 
   const handleSignOut = () => {
+    dispatch(updateUserStatus(auth.currentUser.uid, "offline"));
     signOut(auth)
       .then(() => {
         dispatch(actions.resetUser()); // Reset user state in Redux
@@ -68,10 +70,10 @@ const ShopDrawerContent = (props) => {
           <Text style={styles.drawerItemText}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => navigation.navigate("Request")}
+          onPress={() => navigation.navigate("Chat List")}
           style={styles.drawerItem}
         >
-          <Text style={styles.drawerItemText}>Message</Text>
+          <Text style={styles.drawerItemText}>Messages</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => navigation.navigate("Auto Repair Shops")}

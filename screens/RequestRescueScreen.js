@@ -1,3 +1,4 @@
+import React, { useEffect, useState, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,20 +8,19 @@ import {
   FlatList,
   TouchableOpacity,
 } from "react-native";
-import AppBar from "./AppBar"; // Import AppBar component
-import React, { useEffect, useState, useRef } from "react";
-import { Marker } from "react-native-maps";
+import AppBar from "./AppBar";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useSelector, useDispatch } from "react-redux";
 import { getAllShops } from "../redux/shops/shopsActions";
 import { MapComponent } from "../components/map/MapComponent";
 import { useNavigation } from "@react-navigation/native";
+import { Marker } from "react-native-maps";
 
 const RequestRescueScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [selectedShop, setSelectedShop] = useState(null);
-  const flatListRef = useRef(null); // Reference to the FlatList
+  const flatListRef = useRef(null);
 
   // Fetch all shops when the component is mounted
   useEffect(() => {
@@ -31,7 +31,7 @@ const RequestRescueScreen = () => {
 
   // Handle marker press event
   const handleMarkerPress = (shop) => {
-    setSelectedShop(shop); // Set the selected shop
+    setSelectedShop(shop);
 
     // Find the index of the selected shop in the shops array
     const index = shops.findIndex((s) => s.id === shop.id);
@@ -56,7 +56,8 @@ const RequestRescueScreen = () => {
           <View style={styles.ratingContainer}>
             <Ionicons name="star" size={18} color="#FFD700" />
             <Text style={styles.shopRating}>
-              {item.rating ?? 0.0} ({item.reviews ?? 0} reviews)
+              {item.averageRating?.toFixed(1) || "0.0"} ({item.reviewCount || 0}{" "}
+              {item.reviewCount <= 2 ? "review" : "reviews"})
             </Text>
           </View>
         </View>
@@ -88,7 +89,7 @@ const RequestRescueScreen = () => {
                 title={shop.shopName}
                 description={shop.address}
                 pinColor="purple"
-                onPress={() => handleMarkerPress(shop)} // Handle marker press
+                onPress={() => handleMarkerPress(shop)}
               />
             );
           }
@@ -98,7 +99,7 @@ const RequestRescueScreen = () => {
 
       {/* FlatList showing shops */}
       <FlatList
-        ref={flatListRef} // Attach ref to FlatList
+        ref={flatListRef}
         style={styles.shopList}
         data={shops}
         keyExtractor={(item) => item.id}

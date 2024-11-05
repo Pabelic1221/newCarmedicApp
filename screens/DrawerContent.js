@@ -8,7 +8,7 @@ import {
   Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { auth , db } from "../firebase"; // Ensure you have db imported
+import { auth, db } from "../firebase"; // Ensure you have db imported
 import { signOut } from "firebase/auth";
 import { actions } from "../redux/user/user";
 import { useDispatch } from "react-redux";
@@ -82,16 +82,22 @@ const DrawerContent = (props) => {
           <Text style={styles.drawerItemText}>Auto Repair Shops</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => navigation.navigate("Reviews")}
+          onPress={() => navigation.navigate("Chat List")}
           style={styles.drawerItem}
         >
-          <Text style={styles.drawerItemText}>Reviews</Text>
+          <Text style={styles.drawerItemText}>Chats</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => navigation.navigate("Feedback")}
           style={styles.drawerItem}
         >
           <Text style={styles.drawerItemText}>Feedback</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Reviews")}
+          style={styles.drawerItem}
+        >
+          <Text style={styles.drawerItemText}>Reviews</Text>
         </TouchableOpacity>
       </View>
       <TouchableOpacity onPress={handleSignOut} style={styles.logoutButton}>

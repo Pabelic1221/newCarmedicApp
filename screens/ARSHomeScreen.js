@@ -16,50 +16,18 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { useSelector, useDispatch } from "react-redux";
 import RequestTicket from "../components/modals/RequestTicket";
 import { MapComponent } from "../components/map/MapComponent";
-import { db } from "../firebase"; // Import Firestore instance
-import { collection, onSnapshot, doc, getDoc } from "firebase/firestore"; // Import Firestore functions
+import { getAllRequests } from "../redux/requests/requestsActions";
 import EndTicket from "../components/modals/endTicketModal";
-
 const ARSHomeScreen = () => {
   const dispatch = useDispatch();
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [requests, setRequests] = useState([]); // Local state for requests
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "requests"), async (snapshot) => {
-      const requestList = await Promise.all(
-        snapshot.docs.map(async (requestDoc) => {
-          const requestData = { id: requestDoc.id, ...requestDoc.data() };
+    dispatch(getAllRequests());
+  }, [dispatch]);
 
-          // Fetch user data using userId from the request
-          const userRef = doc(db, "users", requestData.userId);
-          const userSnap = await getDoc(userRef);
-
-          if (userSnap.exists()) {
-            const userData = userSnap.data();
-            return {
-              ...requestData,
-              firstName: userData.firstName,
-              lastName: userData.lastName,
-            };
-          } else {
-            // Handle the case where the user document doesn't exist
-            return {
-              ...requestData,
-              firstName: "Unknown",
-              lastName: "User",
-            };
-          }
-        })
-      );
-
-      setRequests(requestList); // Update state with requests and user names
-    });
-
-    // Cleanup function to unsubscribe from the listener when the component unmounts
-    return () => unsubscribe();
-  }, []);
+  const requests = useSelector((state) => state.requests.requests);
 
   const handleRequestPress = (request) => {
     setSelectedRequest(request);
@@ -83,7 +51,7 @@ const ARSHomeScreen = () => {
               <Marker
                 key={request.id}
                 coordinate={{ longitude, latitude }}
-                title={request.firstName} // Now correctly fetching firstName
+                title={request.firs}
                 description={request.address}
                 pinColor="purple"
               />

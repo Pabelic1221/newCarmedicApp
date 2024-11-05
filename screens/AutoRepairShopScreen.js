@@ -14,7 +14,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux"; // Assuming you're using Redux for user location
 import RequestForm from "../components/modals/RequestForm";
-import ShopAppBar from "./ShopAppBar";
+import AppBar from "./AppBar";
+import ReviewModal from "../components/modals/ReviewModal";
 
 // Haversine formula to calculate distance in kilometers between two coordinates
 const haversineDistance = (lat1, lon1, lat2, lon2) => {
@@ -85,12 +86,20 @@ const AutoRepairShopsScreen = () => {
   });
 
   const handleChatPress = () => {
-    navigation.navigate("ChatScreen", { shopId: shop.id }); // Assuming each shop has a unique id
+    navigation.navigate("Chat Screen", { recieverId: shop.id });
+  };
+  const [isReviewModalVisible, setReviewModalVisible] = useState(false);
+
+  const handleOpenReviewModal = () => {
+    setReviewModalVisible(true);
   };
 
+  const handleCloseReviewModal = () => {
+    setReviewModalVisible(false);
+  };
   return (
     <View style={styles.container}>
-      <ShopAppBar />
+      <AppBar />
       <View style={styles.contentContainer}>
         <View style={styles.shopInfo}>
           <View style={styles.imageContainer}>
@@ -118,6 +127,7 @@ const AutoRepairShopsScreen = () => {
           >
             <Text style={styles.requestButtonText}>Request</Text>
           </TouchableOpacity>
+
           <Modal
             visible={isModalVisible}
             onBackdropPress={handleCloseRequestModal}
@@ -132,6 +142,19 @@ const AutoRepairShopsScreen = () => {
             </View>
           </Modal>
         </View>
+        <TouchableOpacity
+          style={styles.reviewButton}
+          onPress={handleOpenReviewModal}
+        >
+          <Text style={styles.reviewButtonText}>Leave a Review</Text>
+        </TouchableOpacity>
+
+        {/* Review Modal */}
+        <ReviewModal
+          visible={isReviewModalVisible}
+          onClose={handleCloseReviewModal}
+          shopId={shop.id} // Pass shop ID for the review
+        />
       </View>
     </View>
   );
@@ -266,6 +289,17 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     overflow: "scroll",
+  },
+  reviewButton: {
+    backgroundColor: "black",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  reviewButtonText: {
+    color: "white",
+    fontWeight: "bold",
   },
 });
 export default AutoRepairShopsScreen;

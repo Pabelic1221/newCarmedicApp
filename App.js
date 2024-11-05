@@ -16,6 +16,7 @@ import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "./redux/store";
 import GeoLocator from "./components/GeoLocator";
 import { View, Text } from "react-native";
+import TicketListener from "./components/map/Shops/TicketListener";
 import SessionChecker from "./components/session/SessionChecker";
 
 const Stack = createNativeStackNavigator();
