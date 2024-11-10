@@ -10,24 +10,24 @@ import {
 } from "react-native";
 import { auth, db } from "../../firebase";
 import {
-  collection,
+  collectionGroup,
   query,
+  where,
   orderBy,
   getDocs,
-  collectionGroup,
-  doc,
   getDoc,
-  limit,
+  doc,
 } from "firebase/firestore";
 import { useSelector } from "react-redux";
-
-import AppBar from "../../screens/AppBar"; // Import AppBar component
 import { useNavigation } from "@react-navigation/native";
+import AppBar from "../../screens/AppBar";
+import ShopAppBar from "../../screens/ShopAppBar";
 
 const ChatList = () => {
   const navigation = useNavigation();
   const [chats, setChats] = useState([]);
-  const { currentUser } = useSelector((state) => state.user); // Access current user from Redux
+  const { currentUser } = useSelector((state) => state.user);
+
   useEffect(() => {
     const loadChats = async () => {
       const userId = auth.currentUser?.uid;
@@ -39,73 +39,62 @@ const ChatList = () => {
     };
     loadChats();
   }, []);
+
   const fetchChats = async (userId) => {
     try {
       const chatList = [];
-      const seenReceiverIds = new Set(); // Track unique receiver IDs
+      const seenUserIds = new Set();
 
-      // Reference to the "messages" collection group
-      const messagesRef = collectionGroup(db, "messages"); // Target all "messages" subcollections
+      // Fetch all messages where the user is either the sender or receiver
+      const messagesRef = collectionGroup(db, "messages");
+      const allMessagesQuery = query(messagesRef, orderBy("createdAt", "desc"));
+      const allMessagesSnapshot = await getDocs(allMessagesQuery);
 
-      // Retrieve all documents in the "messages" collection groups
-      const querySnapshot = await getDocs(messagesRef);
+      // Loop through each message
+      for (const msgDoc of allMessagesSnapshot.docs) {
+        const messageData = msgDoc.data();
+        const senderId = messageData.user._id; // Sender's ID
+        const receiverId = msgDoc.ref.parent.parent.id; // Receiver's ID
 
-      for (const chatDoc of querySnapshot.docs) {
-        const receiverId =
-          currentUser.role === "Shop"
-            ? chatDoc.data().user._id
-            : chatDoc.ref.parent.parent.id;
+        // Determine if current user is sender or receiver
+        const isUserSender = senderId === userId;
+        const chatPartnerId = isUserSender ? receiverId : senderId;
 
-        // Skip if we've already processed this receiverId
-        if (seenReceiverIds.has(receiverId)) {
-          continue;
-        }
+        // Skip if this chat partner is already processed
+        if (seenUserIds.has(chatPartnerId)) continue;
 
-        // Add receiverId to the set of seen IDs
-        seenReceiverIds.add(receiverId);
+        seenUserIds.add(chatPartnerId);
 
-        // Fetch the latest message from the `messages` sub-collection
-        const messagesRef = collection(
-          db,
-          `chats/${
-            currentUser.role === "Shop" ? auth.currentUser?.uid : receiverId
-          }/messages`
-        );
-        const q = query(messagesRef, orderBy("createdAt", "desc"), limit(1));
-        const messageSnapshot = await getDocs(q);
+        // Fetch chat partner profile
+        const partnerRef =
+          currentUser?.role === "Shop"
+            ? doc(db, "users", chatPartnerId)
+            : doc(db, "shops", chatPartnerId);
 
-        if (!messageSnapshot.empty) {
-          const latestMessageDoc = messageSnapshot.docs[0];
-          const latestMessageData = latestMessageDoc.data();
+        const partnerSnap = await getDoc(partnerRef);
 
-          // Prefix "You: " if the message was sent by the current user
-          const messageText =
-            latestMessageData.user._id === userId
-              ? `You: ${latestMessageData.text}`
-              : latestMessageData.text;
-
-          // Retrieve receiver's details from the appropriate collection based on role
-          const receiverRef =
-            currentUser?.role === "Shop"
-              ? doc(db, "users", receiverId)
-              : doc(db, "shops", receiverId);
-
-          const receiverSnap = await getDoc(receiverRef);
-
-          if (receiverSnap.exists()) {
-            const receiverData = receiverSnap.data();
-            chatList.push({
-              id: receiverId, // Unique ID for each chat item
-              userName: receiverData.firstName
-                ? `${receiverData.firstName} ${receiverData.lastName}`
-                : receiverData.shopName,
-              userPhotoUrl: receiverData.photoUrl || "",
-              latestMessage: messageText,
-              latestMessageTimestamp: latestMessageData.createdAt,
-            });
-          }
+        if (partnerSnap.exists()) {
+          const partnerData = partnerSnap.data();
+          chatList.push({
+            id: chatPartnerId,
+            userName: partnerData.firstName
+              ? `${partnerData.firstName} ${partnerData.lastName}`
+              : partnerData.shopName,
+            userPhotoUrl: partnerData.photoUrl || "",
+            latestMessage: isUserSender
+              ? `You: ${messageData.text}`
+              : messageData.text,
+            latestMessageTimestamp: messageData.createdAt,
+          });
         }
       }
+
+      // Sort chatList by latestMessageTimestamp in descending order
+      chatList.sort(
+        (a, b) =>
+          b.latestMessageTimestamp.toMillis() -
+          a.latestMessageTimestamp.toMillis()
+      );
 
       setChats(chatList);
     } catch (error) {
@@ -115,9 +104,10 @@ const ChatList = () => {
 
   const renderChatItem = ({ item }) => (
     <TouchableOpacity
-      onPress={() =>
-        navigation.navigate("Chat Screen", { recieverId: item.id })
-      }
+      onPress={() => {
+        console.log(item.id);
+        navigation.navigate("Chat Screen", { receiverId: item.id });
+      }}
     >
       <View style={styles.chatItem}>
         <Image
@@ -137,7 +127,7 @@ const ChatList = () => {
 
   return (
     <SafeAreaView>
-      <AppBar />
+      {currentUser.role === "Shop" ? <ShopAppBar /> : <AppBar />}
       <FlatList
         data={chats}
         keyExtractor={(item) => item.id}
@@ -148,11 +138,6 @@ const ChatList = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: "#fff",
-  },
   chatItem: {
     flexDirection: "row",
     alignItems: "center",

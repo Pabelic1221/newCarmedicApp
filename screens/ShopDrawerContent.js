@@ -76,12 +76,6 @@ const ShopDrawerContent = (props) => {
           <Text style={styles.drawerItemText}>Messages</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => navigation.navigate("Auto Repair Shops")}
-          style={styles.drawerItem}
-        >
-          <Text style={styles.drawerItemText}>Auto Repair Shops</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
           onPress={() => navigation.navigate("Reviews")}
           style={styles.drawerItem}
         >
