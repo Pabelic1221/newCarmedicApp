@@ -65,9 +65,15 @@ const ChatList = () => {
 
         seenUserIds.add(chatPartnerId);
 
+        // Check if currentUser exists before accessing its role
+        if (!currentUser) {
+          console.error("Current user is not defined");
+          return;
+        }
+
         // Fetch chat partner profile
         const partnerRef =
-          currentUser?.role === "Shop"
+          currentUser.role === "Shop"
             ? doc(db, "users", chatPartnerId)
             : doc(db, "shops", chatPartnerId);
 
@@ -127,7 +133,8 @@ const ChatList = () => {
 
   return (
     <SafeAreaView>
-      {currentUser.role === "Shop" ? <ShopAppBar /> : <AppBar />}
+      {/* Check if currentUser is defined before rendering AppBar */}
+      {currentUser?.role === "Shop" ? <ShopAppBar /> : <AppBar />}
       <FlatList
         data={chats}
         keyExtractor={(item) => item.id}

@@ -21,19 +21,21 @@ const ShopDrawerContent = (props) => {
   const [shopName, setShopName] = useState(""); // State to hold shopName
 
   useEffect(() => {
-    // Fetch the shopName from Firestore
     const fetchShopName = async () => {
-      try {
-        const shopDoc = await getDoc(doc(db, "shops", auth.currentUser.uid));
-        if (shopDoc.exists()) {
-          const shopData = shopDoc.data();
-          setShopName(shopData.shopName); // Set shopName from Firestore
+      const currentUser  = auth.currentUser ; // Get current user
+      if (currentUser ) { // Check if user is logged in
+        try {
+          const shopDoc = await getDoc(doc(db, "shops", currentUser .uid));
+          if (shopDoc.exists()) {
+            const shopData = shopDoc.data();
+            setShopName(shopData.shopName); // Set shopName from Firestore
+          }
+        } catch (error) {
+          console.error("Error fetching shopName: ", error);
         }
-      } catch (error) {
-        console.error("Error fetching shopName: ", error);
       }
     };
-
+  
     fetchShopName();
   }, []);
 
