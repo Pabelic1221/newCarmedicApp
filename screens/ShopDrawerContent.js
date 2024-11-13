@@ -40,10 +40,13 @@ const ShopDrawerContent = (props) => {
   }, []);
 
   const handleSignOut = () => {
-    dispatch(updateUserStatus(auth.currentUser.uid, "offline"));
+    const currentUser  = auth.currentUser ; // Get current user
+    if (currentUser ) { // Check if user is logged in
+      dispatch(updateUserStatus(currentUser .uid, "offline")); // Update user status
+    }
     signOut(auth)
       .then(() => {
-        dispatch(actions.resetUser()); // Reset user state in Redux
+        dispatch(actions.resetUser ()); // Reset user state in Redux
         navigation.replace("Login");
       })
       .catch((error) => alert(error.message));
