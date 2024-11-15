@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, StyleSheet, SafeAreaView } from "react-native"; // Import SafeAreaView
+import { View, Text, FlatList, StyleSheet, SafeAreaView, Modal, TouchableOpacity } from "react-native"; // Import SafeAreaView
 import { useSelector } from "react-redux";
 import { db } from "../firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
@@ -7,13 +7,14 @@ import AppBar from "./AppBar";
 
 const UserRequestLogScreen = () => {
   const [requests, setRequests] = useState([]);
-  const currentUser   = useSelector((state) => state.user.currentUser  );
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const currentUser  = useSelector((state) => state.user.currentUser );
 
   useEffect(() => {
     const fetchRequests = async () => {
-      if (currentUser  ) {
+      if (currentUser ) {
         const requestsRef = collection(db, "requests");
-        const q = query(requestsRef, where("userId", "==", currentUser  .id));
+        const q = query(requestsRef, where("userId", "==", currentUser .id));
         const querySnapshot = await getDocs(q);
 
         const fetchedRequests = querySnapshot.docs.map((doc) => ({
@@ -26,18 +27,15 @@ const UserRequestLogScreen = () => {
     };
 
     fetchRequests();
-  }, [currentUser  ]);
+  }, [currentUser ]);
 
   const renderRequestItem = ({ item }) => (
-    <View style={styles.requestItem}>
-      <Text style={styles.requestText}>Car Brand: {item.carBrand}</Text>
-      <Text style={styles.requestText}>Car Model: {item.carModel}</Text>
-      <Text style={styles.requestText}>Description: {item.description}</Text>
-      <Text style={styles.requestText}>Specific Problem: {item.specificProblem}</Text>
-      <Text style={styles.requestText}>Status: {item.state}</Text>
-      <Text style={styles.requestText}>Date: {new Date(item.timestamp).toLocaleDateString()}</Text>
-      <Text style={styles.requestText}>Location: {item.latitude}, {item.longitude}</Text>
-    </View>
+    <TouchableOpacity style={styles.requestItem} onPress={() => setSelectedRequest(item)}>
+      <Text style={styles.requestTitle}>Requests Tickets</Text>
+      <Text style={styles.requestDate}>
+        Date: {new Date(item.timestamp).toLocaleDateString()}
+      </Text>
+    </TouchableOpacity>
   );
 
   return (
@@ -49,6 +47,33 @@ const UserRequestLogScreen = () => {
         renderItem={renderRequestItem}
         ListEmptyComponent={<Text style={styles.emptyMessage}>No previous requests found.</Text>}
       />
+
+      {/* Modal for Request Details */}
+      <Modal
+        visible={selectedRequest !== null}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setSelectedRequest(null)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            {selectedRequest && (
+              <>
+                <Text style={styles.modalHeader}>Request Details</Text>
+                <Text style={styles.modalText}>Car Brand: {selectedRequest.carBrand}</Text>
+                <Text style={styles.modalText}>Car Model: {selectedRequest.carModel}</Text>
+                <Text style={styles.modalText}>Description: {selectedRequest.description}</Text>
+                <Text style={styles.modalText}>Specific Problem: {selectedRequest.specificProblem}</Text>
+                <Text style={styles.modalText}>Status: {selectedRequest.state}</Text>
+                <Text style={styles.modalText}>Date: {new Date(selectedRequest.timestamp).toLocaleDateString()}</Text>
+              </>
+            )}
+            <TouchableOpacity onPress={() => setSelectedRequest(null)} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -69,15 +94,52 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
   },
-  requestText: {
+  requestTitle: {
     fontSize: 16,
-    color: "#333",
+    fontWeight: "bold",
+  },
+  requestDate: {
+    fontSize: 12,
+    color: "#777",
   },
   emptyMessage: {
     textAlign: "center",
     fontSize: 18,
     color: "#888",
     marginTop: 20,
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+ modalContainer: {
+    width: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+    elevation: 5,
+  },
+  modalHeader: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  closeButton: {
+    marginTop: 15,
+    backgroundColor: "#007BFF",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  closeButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
 

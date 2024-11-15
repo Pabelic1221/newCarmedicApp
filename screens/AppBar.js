@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   },
   appBar: {
     position: "relative", // Positioning the app bar at the top
-    top: 30,
+    top: 10,
     left: 0,
     right: 0,
     flexDirection: "row",
