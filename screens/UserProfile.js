@@ -11,8 +11,8 @@ import {
   Alert,
   Image,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { auth, db, storage } from "../firebase"; // Make sure to import storage
+import { useNavigation } from "@react-navigation/native"; // Import useNavigation
+import { auth, db, storage } from "../firebase";
 import Icon from "react-native-vector-icons/Ionicons";
 import { doc, updateDoc } from "firebase/firestore";
 import {
@@ -21,12 +21,12 @@ import {
   updatePassword,
 } from "firebase/auth";
 import { useSelector } from "react-redux";
-import { getAddressFromCoordinates } from "../helpers/maps/getAddress";
 import { launchImageLibrary } from "react-native-image-picker";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import AppBar from "./AppBar";
 
 const UserProfile = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation(); // Initialize navigation
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -36,9 +36,6 @@ const UserProfile = () => {
   const [newPassword, setNewPassword] = useState("");
   const [profileImage, setProfileImage] = useState(null);
   const currentUser  = useSelector((state) => state.user.currentUser );
-  const { longitude, latitude } = useSelector(
-    (state) => state.userLocation.currentLocation
-  );
 
   useEffect(() => {
     const user = auth.currentUser ;
@@ -47,9 +44,9 @@ const UserProfile = () => {
       setLastName(currentUser .lastName);
       setEmail(currentUser .email);
       setAddress(currentUser .address);
-      setProfileImage(currentUser .profileImage); // Assuming you have a profileImage field
+      setProfileImage(currentUser .profileImage);
     }
-  }, []);
+  }, [currentUser ]);
 
   const handleUpdateProfile = async () => {
     const user = auth.currentUser ;
@@ -65,13 +62,12 @@ const UserProfile = () => {
         await updatePassword(user, newPassword);
       }
 
-      // Update user profile data
       await updateDoc(userDocRef, {
         firstName,
         lastName,
         address,
         phone,
-        profileImage, // Add profile image URL here
+        profileImage,
       });
       Alert.alert("Success", "Profile updated successfully.");
     } catch (error) {
@@ -111,32 +107,27 @@ const UserProfile = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <AppBar />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.innerContainer}
       >
-        <View style={styles.appBar}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <Icon name ="arrow-back" size={24} color="#000" />
+        <View style={styles.profileImageContainer}>
+          <TouchableOpacity onPress={handleImageUpload}>
+            {profileImage ? (
+              <Image source={{ uri: profileImage }} style={styles.profileImage} />
+            ) : (
+              <View style={styles.placeholderImage}>
+                <Text style={styles.placeholderText}>Upload Image</Text>
+              </View>
+            )}
           </TouchableOpacity>
-          <Text style={styles.title}>User  Profile</Text>
         </View>
-        <TouchableOpacity onPress={handleImageUpload}>
-          {profileImage ? (
-            <Image source={{ uri: profileImage }} style={styles.profileImage} />
-          ) : (
-            <View style={styles.placeholderImage}>
-              <Text style={styles.placeholderText}>Upload Image</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+
         <TextInput
           style={styles.input}
           placeholder="First Name"
-          value={firstName}
+          value ={firstName}
           onChangeText={setFirstName}
         />
         <TextInput
@@ -150,7 +141,8 @@ const UserProfile = () => {
           placeholder="Email"
           value={email}
           onChangeText={setEmail}
-          editable={false}
+          keyboardType="email-address"
+          editable={false} // Make email read-only
         />
         <TextInput
           style={styles.input}
@@ -163,23 +155,32 @@ const UserProfile = () => {
           placeholder="Phone"
           value={phone}
           onChangeText={setPhone}
+          keyboardType="phone-pad"
         />
         <TextInput
           style={styles.input}
           placeholder="Old Password"
-          secureTextEntry
           value={oldPassword}
           onChangeText={setOldPassword}
+          secureTextEntry
         />
         <TextInput
           style={styles.input}
           placeholder="New Password"
-          secureTextEntry
           value={newPassword}
           onChangeText={setNewPassword}
+          secureTextEntry
         />
-        <TouchableOpacity onPress={handleUpdateProfile} style={styles.button}>
+        <TouchableOpacity style={styles.button} onPress={handleUpdateProfile}>
           <Text style={styles.buttonText}>Update Profile</Text>
+        </TouchableOpacity>
+        
+        {/* Button to navigate to UserRequestLogScreen */}
+        <TouchableOpacity 
+          style={styles.button} 
+          onPress={() => navigation.navigate('UserRequestLog')}
+        >
+          <Text style={styles.buttonText}>View Request Log</Text>
         </TouchableOpacity>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -189,53 +190,48 @@ const UserProfile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f5f5f5",
   },
   innerContainer: {
+    flex: 1,
     padding: 20,
+    justifyContent: "center",
   },
-  appBar: {
-    flexDirection: "row",
+  profileImageContainer: {
     alignItems: "center",
     marginBottom: 20,
-  },
-  backButton: {
-    marginRight: 10,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
   },
   profileImage: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    marginBottom: 20,
   },
   placeholderImage: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: "#e0e0e0",
+    backgroundColor: "#ccc",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
   },
   placeholderText: {
-    color: "#888",
+    color: "#fff",
+    fontWeight: "bold",
   },
   input: {
-    height: 40,
+    height: 50,
     borderColor: "#ccc",
     borderWidth: 1,
-    marginBottom: 15,
+    borderRadius: 5,
     paddingHorizontal: 10,
+    marginBottom: 15,
+    backgroundColor: "#fff",
   },
   button: {
-    backgroundColor: "#007bff",
-    padding: 10,
-    alignItems: "center",
+    backgroundColor: "#007BFF",
+    paddingVertical: 15,
     borderRadius: 5,
+    alignItems: "center",
   },
   buttonText: {
     color: "#fff",

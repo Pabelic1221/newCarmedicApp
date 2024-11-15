@@ -8,7 +8,9 @@ import ShopRegisterScreen from "./screens/ShopRegisterScreen";
 import DrawerNavigator from "./DrawerNavigator";
 import UserProfile from "./screens/UserProfile";
 import ChatScreen from "./screens/ChatScreen";
-import ChatList from "./components/chat/ChatList"; // Import your ChatListScreen
+import ChatList from "./components/chat/ChatList";
+import UserRequestLogScreen from "./screens/UserRequestLogScreen";
+
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "./redux/store";
@@ -62,7 +64,7 @@ export default function App() {
               {/* Authentication Stack */}
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Register" component={RegisterScreen} />
-              <Stack.Screen name="User Register" component={UserRegisterScreen} />
+              <Stack.Screen name="UserRegister" component={UserRegisterScreen} />
               <Stack.Screen name="ShopRegister" component={ShopRegisterScreen} />
 
               {/* Main App Navigation */}
@@ -70,12 +72,13 @@ export default function App() {
                 <Stack.Screen name="Main" component={DrawerNavigator} />
               )}
               {userRole === "user" && (
-                <Stack.Screen name="User  Profile" component={UserProfile} />
+                <Stack.Screen name="UserProfile" component={UserProfile} />
               )}
 
               {/* Chat Screen */}
               <Stack.Screen name="ChatScreen" component={ChatScreen} />
               <Stack.Screen name="ChatList" component={ChatList} />
+              <Stack.Screen name="UserRequestLog" component={UserRequestLogScreen}/>
             </Stack.Navigator>
           </NavigationContainer>
         </GeoLocator>

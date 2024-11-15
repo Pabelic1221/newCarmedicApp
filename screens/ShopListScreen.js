@@ -15,7 +15,7 @@ import {
   where,
   getDocs,
 } from "firebase/firestore";
-import AppBar from "./AppBar"; // Import AppBar component
+import AppBar from "./AppBar";
 
 const ShopListScreen = () => {
   const [searchTerm, setSearchTerm] = useState("");

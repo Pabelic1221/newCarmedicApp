@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
+import { DrawerActions } from '@react-navigation/native';
 
 const AppBar = () => {
   const navigation = useNavigation();
@@ -17,15 +18,12 @@ const AppBar = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.appBar}>
-        <TouchableOpacity onPress={() => navigation.openDrawer()}>
+        {/* Use DrawerActions to open the drawer */}
+        <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
           <Ionicons name="menu" size={30} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.appTitle}>CarMedic</Text>
-        <TouchableOpacity
-          onPress={() => {
-            /* Add Search Functionality */
-          }}
-        >
+        <TouchableOpacity onPress={() => { navigation.navigate("Auto Repair Shops") }}>
           <Ionicons name="search" size={30} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -54,7 +52,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 10,
+    paddingVertical: 30,
     paddingHorizontal: 20,
     backgroundColor: "#000",
   },
@@ -64,7 +62,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   container: {
-    marginBottom: 40,
+    marginBottom: 10,
   },
   scrollViewContent: {
     paddingTop: Platform.OS === "android" ? 75 : 100, // Add padding to avoid content overlap

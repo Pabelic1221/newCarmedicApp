@@ -18,6 +18,7 @@ import AppBar from "./screens/AppBar";
 import TicketListener from "./components/map/Shops/TicketListener";
 import Chat from "./screens/ChatScreen";
 import ChatList from "./components/chat/ChatList";
+import UserRequestLogScreen from "./screens/UserRequestLogScreen"
 const Drawer = createDrawerNavigator();
 
 function DrawerNavigator() {
@@ -66,8 +67,9 @@ function DrawerNavigator() {
       <Drawer.Screen name="Feedback" component={FeedbackScreen} />
       <Drawer.Screen name="Chat Screen" component={Chat} />
       <Drawer.Screen name="Chat List" component={ChatList} />
-      <Drawer.Screen name="Profile" component={UserProfile} />
+      <Drawer.Screen name="UserProfile" component={UserProfile} />
       <Drawer.Screen name="AppBar" component={AppBar} />
+      <Drawer.Screen name="RequestLog" component={UserRequestLogScreen} />
     </Drawer.Navigator>
   );
 }
