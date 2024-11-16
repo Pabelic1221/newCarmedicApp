@@ -91,13 +91,6 @@ export default function RequestTicket({ request, onClose, onAcceptRequest }) {
             >
               <Text style={styles.declineButtonText}>Decline</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.endSessionButton}
-              onPress={handleEndSession}
-              disabled={loading}
-            >
-              <Text style={styles.endSessionButtonText}>End Session</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </View>

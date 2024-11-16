@@ -14,13 +14,15 @@ import { useSelector, useDispatch } from "react-redux";
 import { getAllShops } from "../redux/shops/shopsActions";
 import { MapComponent } from "../components/map/MapComponent";
 import { useNavigation } from "@react-navigation/native";
-import { Marker } from "react-native-maps";
+import { Marker, Polyline } from "react-native-maps";
 
 const RequestRescueScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [selectedShop, setSelectedShop] = useState(null);
   const flatListRef = useRef(null);
+  const [routeCoordinates, setRouteCoordinates] = useState([]); // State for route coordinates
+  const [isRequestAccepted, setIsRequestAccepted] = useState(false); // State to track if the request is accepted
 
   // Fetch all shops when the component is mounted
   useEffect(() => {
@@ -28,6 +30,7 @@ const RequestRescueScreen = () => {
   }, [dispatch]);
 
   const shops = useSelector((state) => state.shops.shops);
+  const userLocation = useSelector((state) => state.userLocation.currentLocation); // Get user's current location
 
   // Handle marker press event
   const handleMarkerPress = (shop) => {
@@ -77,7 +80,6 @@ const RequestRescueScreen = () => {
     <SafeAreaView style={styles.container}>
       <AppBar />
 
-      {/* Map with markers for shops */}
       <MapComponent>
         {shops.map((shop) => {
           const { longitude, latitude } = shop;
@@ -95,6 +97,11 @@ const RequestRescueScreen = () => {
           }
           return null;
         })}
+        
+        {/* Render polyline if routeCoordinates are available */}
+        {routeCoordinates.length > 0 && (
+          <Polyline coordinates={routeCoordinates} strokeColor="blue" strokeWidth={3} />
+        )}
       </MapComponent>
 
       {/* FlatList showing shops */}
