@@ -11,23 +11,28 @@ import {
 } from "react-native";
 import ShopAppBar from "./ShopAppBar"; // Import AppBar component
 import React, { useEffect, useState } from "react";
-import { Marker } from "react-native-maps";
+import { Marker, Polyline } from "react-native-maps"; // Import Polyline
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useSelector, useDispatch } from "react-redux";
 import RequestTicket from "../components/modals/RequestTicket";
 import { MapComponent } from "../components/map/MapComponent";
 import { getAllRequests } from "../redux/requests/requestsActions";
 import EndTicket from "../components/modals/endTicketModal";
+import axios from "axios"; // Import axios for API requests
+import { useIsFocused } from '@react-navigation/native';
+
 const ARSHomeScreen = () => {
   const dispatch = useDispatch();
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [routeCoordinates, setRouteCoordinates] = useState([]); // State for route coordinates
 
   useEffect(() => {
     dispatch(getAllRequests());
   }, [dispatch]);
 
   const requests = useSelector((state) => state.requests.requests);
+  const userLocation = useSelector((state) => state.userLocation.currentLocation); // Get user's current location
 
   const handleRequestPress = (request) => {
     setSelectedRequest(request);
@@ -37,6 +42,41 @@ const ARSHomeScreen = () => {
   const handleCloseModal = () => {
     setModalVisible(false);
     setSelectedRequest(null);
+    setRouteCoordinates([]); // Reset route coordinates when closing the modal
+  };
+
+  // Function to fetch route coordinates
+  const fetchRouteCoordinates = async (origin, destination) => {
+    const start = `${origin.longitude},${origin.latitude}`;
+    const end = `${destination.longitude},${destination.latitude}`;
+    const url = `https://router.project-osrm.org/route/v1/driving/${start};${end}?overview=full&geometries=geojson`;
+
+    try {
+      const response = await axios.get(url);
+      const route = response.data.routes[0].geometry.coordinates;
+
+      // Convert OSRM response [longitude, latitude] into Google Maps format {latitude, longitude}
+      const coordinates = route.map(([lon, lat]) => ({
+        latitude: lat,
+        longitude: lon,
+      }));
+
+      setRouteCoordinates(coordinates); // Update state with new route coordinates
+    } catch (error) {
+      console.error("Error fetching route:", error);
+    }
+  };
+
+  // Accept request and fetch route coordinates
+  const handleAcceptRequest = () => {
+    if (selectedRequest) {
+      const destination = {
+        latitude: selectedRequest.latitude,
+        longitude: selectedRequest.longitude,
+      };
+      fetchRouteCoordinates(userLocation, destination); // Fetch route coordinates
+      setModalVisible(false); // Close the modal
+    }
   };
 
   return (
@@ -51,14 +91,19 @@ const ARSHomeScreen = () => {
               <Marker
                 key={request.id}
                 coordinate={{ longitude, latitude }}
-                title={request.firs}
-                description={request.address}
+                title={request.firstName}
+                description={request.specificProblem}
                 pinColor="purple"
+                onPress={() => handleRequestPress(request)} // Open modal on marker press
               />
             );
           }
           return null;
         })}
+        {/* Render polyline if routeCoordinates are available */}
+        {routeCoordinates.length > 0 && (
+          <Polyline coordinates={routeCoordinates} strokeColor="blue" strokeWidth={3} />
+        )}
       </MapComponent>
 
       <Text style={styles.heading}>Pending Requests</Text>
@@ -119,6 +164,7 @@ const ARSHomeScreen = () => {
             <RequestTicket
               request={selectedRequest}
               onClose={handleCloseModal}
+              onAcceptRequest={handleAcceptRequest} // Pass the accept function to RequestTicket
             />
           )
         ) : (

@@ -14,12 +14,13 @@ import { useSelector, useDispatch } from "react-redux";
 import { getAllShops } from "../redux/shops/shopsActions";
 import { MapComponent } from "../components/map/MapComponent";
 import { useNavigation } from "@react-navigation/native";
-import { Marker } from "react-native-maps";
+import { Marker, Polyline } from "react-native-maps";
 
 const RequestRescueScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [selectedShop, setSelectedShop] = useState(null);
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
   const flatListRef = useRef(null);
 
   // Fetch all shops when the component is mounted
@@ -40,6 +41,24 @@ const RequestRescueScreen = () => {
     if (flatListRef.current && index !== -1) {
       flatListRef.current.scrollToIndex({ index, animated: true });
     }
+  };
+
+  // Function to handle accepting a request
+  const handleAcceptRequest = (request) => {
+    // Here you would fetch the route coordinates based on the request
+    // For demonstration, let's use some dummy coordinates
+    const dummyRoute = [
+      { latitude: 37.78825, longitude: -122.4324 },
+      { latitude: 37.78825, longitude: -122.4224 },
+      { latitude: 37.78825, longitude: -122.4124 },
+    ];
+    setRouteCoordinates(dummyRoute);
+  };
+
+  // Function to handle ending the session
+  const handleEndSession = () => {
+    setRouteCoordinates([]); // Clear the route coordinates
+    setSelectedShop(null); // Clear the selected shop
   };
 
   // Render each shop item
@@ -94,7 +113,15 @@ const RequestRescueScreen = () => {
             );
           }
           return null;
-        })}
+          })}
+        {/* Render polyline if route coordinates are available */}
+        {routeCoordinates.length > 0 && (
+          <Polyline
+            coordinates={routeCoordinates}
+            strokeColor="#000" // Customize the color of the polyline
+            strokeWidth={4} // Customize the width of the polyline
+          />
+        )}
       </MapComponent>
 
       {/* FlatList showing shops */}
@@ -105,6 +132,22 @@ const RequestRescueScreen = () => {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
       />
+
+      {/* Buttons to accept request and end session */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => handleAcceptRequest(selectedShop)}
+        >
+          <Text style={styles.buttonText}>Accept Request</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={handleEndSession}
+        >
+          <Text style={styles.buttonText}>End Session</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
@@ -167,5 +210,21 @@ const styles = StyleSheet.create({
   },
   shopList: {
     margin: 15,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    padding: 10,
+  },
+  actionButton: {
+    backgroundColor: "#007BFF",
+    padding: 10,
+    borderRadius: 5,
+    width: "40%",
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });

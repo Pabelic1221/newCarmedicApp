@@ -1,92 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { db } from "../../firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import MapView, { Polyline, Marker } from "react-native-maps";
-import { useSelector } from "react-redux";
-import axios from "axios";
-import Constants from "expo-constants";
 
-const GOOGLE_MAPS_API_KEY = Constants.expoConfig.extra.googleMapsApiKey;
-
-export default function RequestTicket({ request, onClose }) {
+export default function RequestTicket({ request, onClose, onAcceptRequest }) {
   const [loading, setLoading] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
-  const [routeCoordinates, setRouteCoordinates] = useState([]);
 
-  // Fetch current user location from Redux
-  const userLocation = useSelector(
-    (state) => state.userLocation.currentLocation
-  );
-
-  // Function to fetch the route from OSRM
-  const fetchRouteFromOSRM = async (origin, destination) => {
-    const start = `${origin.longitude},${origin.latitude}`;
-    const end = `${destination.longitude},${destination.latitude}`;
-    const url = `https://router.project-osrm.org/route/v1/driving/${start};${end}?overview=full&geometries=geojson`;
-
-    try {
-      const response = await axios.get(url);
-      const route = response.data.routes[0].geometry.coordinates;
-
-      // Convert OSRM response [longitude, latitude] into Google Maps format {latitude, longitude}
-      const coordinates = route.map(([lon, lat]) => ({
-        latitude: lat,
-        longitude: lon,
-      }));
-
-      setRouteCoordinates(coordinates);
-    } catch (error) {
-      console.error("Error fetching route:", error);
-    }
-  };
-
-  // Start navigation
-  const handleAcceptRequest = () => {
-    setIsNavigating(true);
-    const destination = {
-      latitude: request.latitude,
-      longitude: request.longitude,
-    };
-    fetchRouteFromOSRM(userLocation, destination);
-  };
-
-  // Re-fetch route when userLocation changes
-  useEffect(() => {
-    if (isNavigating && userLocation) {
-      const destination = {
-        latitude: request.latitude,
-        longitude: request.longitude,
-      };
-      fetchRouteFromOSRM(userLocation, destination);
-    }
-  }, [userLocation, isNavigating]);
-
-  // Cancel navigation
-  const handleCancelNavigation = async () => {
-    setLoading(true);
-    try {
-      const requestDocRef = doc(db, "requests", request.id);
-      await updateDoc(requestDocRef, { state: "pending" });
-      setIsNavigating(false);
-    } catch (error) {
-      console.error(`Error updating request: ${error}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // End navigation
-  const handleEndNavigation = async () => {
+  // Accept request and call the passed function to fetch the route
+  const handleAcceptRequest = async () => {
     setLoading(true);
     try {
       const requestDocRef = doc(db, "requests", request.id);
       await updateDoc(requestDocRef, { state: "accepted" });
-      setIsNavigating(false);
-      onClose();
+      console.log("Request accepted");
+
+      // Call the function to fetch route coordinates
+      onAcceptRequest(request); // Pass the request to the parent function
+      onClose(); // Close the modal
     } catch (error) {
-      console.error(`Error updating request: ${error}`);
+      console.error(`Error accepting request: ${error}`);
     } finally {
       setLoading(false);
     }
@@ -101,6 +34,21 @@ export default function RequestTicket({ request, onClose }) {
       onClose();
     } catch (error) {
       console.error(`Error declining request: ${error}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // End the session
+  const handleEndSession = async () => {
+    setLoading(true);
+    try {
+      const requestDocRef = doc(db, "requests", request.id);
+      await updateDoc(requestDocRef, { state: "ended" });
+      console.log("Session ended");
+      onClose();
+    } catch (error) {
+      console.error(`Error ending session: ${error}`);
     } finally {
       setLoading(false);
     }
@@ -128,70 +76,29 @@ export default function RequestTicket({ request, onClose }) {
           </Text>
           <Text style={styles.label}>Concern: {request.specificProblem}</Text>
 
-          {!isNavigating ? (
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.acceptButton}
-                onPress={handleAcceptRequest}
-                disabled={loading}
-              >
-                <Text style={styles.acceptButtonText}>Start Navigation</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.declineButton}
-                onPress={handleDeclineRequest}
-                disabled={loading}
-              >
-                <Text style={styles.declineButtonText}>Decline</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <>
-              <MapView
-                style={styles.map}
-                initialRegion={{
-                  latitude: userLocation.latitude,
-                  longitude: userLocation.longitude,
-                  latitudeDelta: 0.0922,
-                  longitudeDelta: 0.0421,
-                }}
-                showsUserLocation={true}
-              >
-                <Marker
-                  coordinate={{
-                    latitude: request.latitude,
-                    longitude: request.longitude,
-                  }}
-                  title="Destination"
-                />
-
-                {routeCoordinates.length > 0 && (
-                  <Polyline
-                    coordinates={routeCoordinates}
-                    strokeColor="blue"
-                    strokeWidth={3}
-                  />
-                )}
-              </MapView>
-
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                  style={styles.declineButton}
-                  onPress={handleCancelNavigation}
-                  disabled={loading}
-                >
-                  <Text style={styles.declineButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.acceptButton}
-                  onPress={handleEndNavigation}
-                  disabled={loading}
-                >
-                  <Text style={styles.acceptButtonText}>End & Accept</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          )}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.acceptButton}
+              onPress={handleAcceptRequest}
+              disabled={loading}
+            >
+              <Text style={styles.acceptButtonText}>Accept Request</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.declineButton}
+              onPress={handleDeclineRequest}
+              disabled={loading}
+            >
+              <Text style={styles.declineButtonText}>Decline</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.endSessionButton}
+              onPress={handleEndSession}
+              disabled={loading}
+            >
+              <Text style={styles.endSessionButtonText}>End Session</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </Modal>
@@ -227,18 +134,6 @@ const styles = StyleSheet.create({
     color: "#333",
     marginBottom: 5,
   },
-  value: {
-    fontWeight: "bold",
-    color: "#000",
-  },
-  problemBadge: {
-    fontWeight: "bold",
-    color: "#fff",
-    backgroundColor: "#FF6961",
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 5,
-  },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -267,10 +162,5 @@ const styles = StyleSheet.create({
   declineButtonText: {
     color: "#fff",
     fontWeight: "bold",
-  },
-  map: {
-    width: "100%",
-    height: 300,
-    marginTop: 20,
   },
 });
