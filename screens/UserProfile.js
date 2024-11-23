@@ -11,69 +11,35 @@ import {
   Alert,
   Image,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native"; // Import useNavigation
-import { auth, db, storage } from "../firebase";
-import Icon from "react-native-vector-icons/Ionicons";
-import { doc, updateDoc } from "firebase/firestore";
-import {
-  reauthenticateWithCredential,
-  EmailAuthProvider,
-  updatePassword,
-} from "firebase/auth";
+import { useNavigation } from "@react-navigation/native";
+import { auth, db } from "../firebase";
 import { useSelector } from "react-redux";
 import { launchImageLibrary } from "react-native-image-picker";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import AppBar from "./AppBar";
+import { doc, updateDoc } from "firebase/firestore";
+import AppBar from "./AppBar"; // Import your AppBar component
 
 const UserProfile = () => {
-  const navigation = useNavigation(); // Initialize navigation
+  const navigation = useNavigation();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
+  const [contact, setContact] = useState("");
   const [address, setAddress] = useState("");
-  const [phone, setPhone] = useState("");
-  const [oldPassword, setOldPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [profileImage, setProfileImage] = useState(null);
+  const [isEdited, setIsEdited] = useState(false); // State to track if fields are edited
   const currentUser  = useSelector((state) => state.user.currentUser );
 
   useEffect(() => {
-    const user = auth.currentUser ;
-    if (user && currentUser .role === "User ") {
-      setFirstName(currentUser .firstName);
-      setLastName(currentUser .lastName);
-      setEmail(currentUser .email);
-      setAddress(currentUser .address);
-      setProfileImage(currentUser .profileImage);
+    // Load current user data if available
+    if (currentUser ) {
+      setProfileImage(currentUser .profileImage || null);
+      setFirstName(currentUser .firstName || "");
+      setLastName(currentUser .lastName || "");
+      setContact(currentUser .contact || "");
+      setAddress(currentUser .address || "");
     }
   }, [currentUser ]);
-
-  const handleUpdateProfile = async () => {
-    const user = auth.currentUser ;
-    const userDocRef = doc(db, "users", user.uid);
-
-    try {
-      if (oldPassword && newPassword) {
-        const credential = EmailAuthProvider.credential(
-          user.email,
-          oldPassword
-        );
-        await reauthenticateWithCredential(user, credential);
-        await updatePassword(user, newPassword);
-      }
-
-      await updateDoc(userDocRef, {
-        firstName,
-        lastName,
-        address,
-        phone,
-        profileImage,
-      });
-      Alert.alert("Success", "Profile updated successfully.");
-    } catch (error) {
-      Alert.alert("Error", error.message);
-    }
-  };
 
   const handleImageUpload = async () => {
     const result = await launchImageLibrary({
@@ -81,37 +47,46 @@ const UserProfile = () => {
       quality: 1,
     });
 
-    if (result.didCancel) {
-      console.log("User  cancelled image picker");
-      return;
-    } else if (result.error) {
-      console.log("ImagePicker Error: ", result.error);
-      return;
+    if (!result.didCancel && !result.error) {
+      const uri = result.assets[0].uri;
+      setProfileImage(uri);
+      setIsEdited(true); // Mark as edited
     }
+  };
 
-    const uri = result.assets[0].uri;
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    const user = auth.currentUser ;
-
-    const storageRef = ref(storage, `profileImages/${user.uid}`);
-    uploadBytes(storageRef, blob).then(async (snapshot) => {
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      setProfileImage(downloadURL);
-      await updateDoc(doc(db, "users", user.uid), { profileImage: downloadURL });
-      Alert.alert("Success", "Profile picture updated successfully.");
-    }).catch(error => {
+  const handleUpdateProfile = async () => {
+    const userDocRef = doc(db, "users", auth.currentUser .uid);
+    try {
+      await updateDoc(userDocRef, {
+        firstName,
+        lastName,
+        contact,
+        address,
+        profileImage,
+      });
+      Alert.alert("Success", "Profile updated successfully.");
+      setIsEdited(false); // Reset edited state after saving
+    } catch (error) {
       Alert.alert("Error", error.message);
-    });
+    }
+  };
+
+  // Function to handle input changes and set edited state
+  const handleInputChange = (setter) => (value) => {
+    setter(value);
+    setIsEdited(true); // Mark as edited
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Include the AppBar at the top */}
       <AppBar />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.innerContainer}
       >
+        {/* Profile Picture Section */}
         <View style={styles.profileImageContainer}>
           <TouchableOpacity onPress={handleImageUpload}>
             {profileImage ? (
@@ -122,63 +97,60 @@ const UserProfile = () => {
               </View>
             )}
           </TouchableOpacity>
+          <Text style={styles.placeholderText}>Profile Picture: Tap to change</Text>
         </View>
 
+        {/* Input Fields */}
         <TextInput
           style={styles.input}
           placeholder="First Name"
-          value ={firstName}
-          onChangeText={setFirstName}
+          value={firstName}
+          onChangeText={handleInputChange(setFirstName)}
         />
         <TextInput
           style={styles.input}
           placeholder="Last Name"
           value={lastName}
-          onChangeText={setLastName}
+          onChangeText={handleInputChange(setLastName)}
         />
         <TextInput
           style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          editable={false} // Make email read-only
+          placeholder="Contact"
+          value={contact}
+          onChangeText={handleInputChange(setContact)}
         />
         <TextInput
           style={styles.input}
           placeholder="Address"
           value={address}
-          onChangeText={setAddress}
+          onChangeText={handleInputChange(setAddress)}
         />
         <TextInput
           style={styles.input}
-          placeholder="Phone"
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Old Password"
-          value={oldPassword}
-          onChangeText={setOldPassword}
+          placeholder="Current Password"
           secureTextEntry
+          value={currentPassword}
+ onChangeText={handleInputChange(setCurrentPassword)}
         />
         <TextInput
           style={styles.input}
           placeholder="New Password"
-          value={newPassword}
-          onChangeText={setNewPassword}
           secureTextEntry
+          value={newPassword}
+          onChangeText={handleInputChange(setNewPassword)}
         />
-        <TouchableOpacity style={styles.button} onPress={handleUpdateProfile}>
-          <Text style={styles.buttonText}>Update Profile</Text>
-        </TouchableOpacity>
-        
-        {/* Button to navigate to UserRequestLogScreen */}
-        <TouchableOpacity 
-          style={styles.button} 
-          onPress={() => navigation.navigate('UserRequestLog')}
+
+        {/* Conditionally render the Save Button */}
+        {isEdited && (
+          <TouchableOpacity style={styles.saveButton} onPress={handleUpdateProfile}>
+            <Text style={styles.buttonText}>SAVE</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Navigate to User Request Log Button */}
+        <TouchableOpacity
+          style={styles.requestLogButton}
+          onPress={() => navigation.navigate("UserRequestLog")}
         >
           <Text style={styles.buttonText}>View Request Log</Text>
         </TouchableOpacity>
@@ -190,15 +162,13 @@ const UserProfile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#fff',
   },
   innerContainer: {
-    flex: 1,
-    padding: 20,
-    justifyContent: "center",
+    padding: 16,
   },
   profileImageContainer: {
-    alignItems: "center",
+    alignItems: 'center',
     marginBottom: 20,
   },
   profileImage: {
@@ -210,32 +180,37 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: "#ccc",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   placeholderText: {
-    color: "#fff",
-    fontWeight: "bold",
+    textAlign: 'center',
+    color: '#888',
   },
   input: {
-    height: 50,
-    borderColor: "#ccc",
+    height: 40,
+    borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 5,
+    marginBottom: 12,
     paddingHorizontal: 10,
-    marginBottom: 15,
-    backgroundColor: "#fff",
   },
-  button: {
-    backgroundColor: "#007BFF",
-    paddingVertical: 15,
+  saveButton: {
+    backgroundColor: '#007BFF',
+    padding: 10,
+    alignItems: 'center',
     borderRadius: 5,
-    alignItems: "center",
+  },
+  requestLogButton: {
+    backgroundColor: '#28A745',
+    padding: 10,
+    alignItems: 'center',
+    borderRadius: 5,
+    marginTop: 10,
   },
   buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
 
