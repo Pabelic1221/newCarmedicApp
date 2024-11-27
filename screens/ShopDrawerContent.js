@@ -61,7 +61,7 @@ const ShopDrawerContent = (props) => {
         />
         <TouchableOpacity
           style={styles.userInfo}
-          onPress={() => navigation.navigate("UserProfile")}
+          onPress={() => navigation.navigate("ShopProfile")}
         >
           {/* Replace email with shopName */}
           <Text style={styles.shopName}>{shopName || "Shop Name"}</Text>
