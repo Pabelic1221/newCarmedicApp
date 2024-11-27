@@ -229,8 +229,10 @@ export default function Chat() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {currentUser.role === "Shop" ? <ShopAppBar /> : <AppBar />}
-      <View style={{ flex: 1 }}>
+      <View style={{ zIndex: 999 }}>
+        {currentUser.role === "Shop" ? <ShopAppBar /> : <AppBar />}
+      </View>
+      <View style={{ flex: 1, paddingTop: 60 }}>
         <View style={styles.header}>
           <Text style={styles.shopName}>{shopName}</Text>
           <View style={styles.statusIcon}>{getStatusIcon()}</View>
@@ -254,6 +256,10 @@ export default function Chat() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  content: {
+    flex: 1,
+    marginTop: 60, // Adjust based on AppBar height
   },
   header: {
     flexDirection: "row",

@@ -134,7 +134,9 @@ const ChatList = () => {
   return (
     <SafeAreaView>
       {/* Check if currentUser is defined before rendering AppBar */}
-      {currentUser?.role === "Shop" ? <ShopAppBar /> : <AppBar />}
+      <View style={{ zIndex: 999 }}>
+        {currentUser.role === "Shop" ? <ShopAppBar /> : <AppBar />}
+      </View>
       <FlatList
         data={chats}
         keyExtractor={(item) => item.id}

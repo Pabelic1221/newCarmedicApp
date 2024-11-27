@@ -113,6 +113,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     justifyContent: "center",
   },
+  content: {
+    flex: 1,
+    marginTop: 60, // Adjust based on AppBar height
+  },
   userInfo: {
     marginBottom: 20,
     alignItems: "center",

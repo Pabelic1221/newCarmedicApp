@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
 
 const pickerSelectStyles = StyleSheet.create({
   inputIOS: {
-    height: 40,
+    height: 60,
     borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 8,
@@ -193,7 +193,7 @@ const pickerSelectStyles = StyleSheet.create({
     color: "#000",
   },
   inputAndroid: {
-    height: 40,
+    height: 60,
     borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 8,
