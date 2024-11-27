@@ -1,17 +1,69 @@
-import React, { useState } from 'react';
-import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, ScrollView, Platform } from 'react-native';
-import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import React, { useState } from "react";
+import {
+  KeyboardAvoidingView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Alert,
+  ScrollView,
+  Platform,
+  Image,
+} from "react-native";
+import { auth, db, storage } from "../firebase";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+} from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import Icon from 'react-native-vector-icons/Ionicons';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import Icon from "react-native-vector-icons/Ionicons";
+import * as ImagePicker from "expo-image-picker";
 
 const UserRegisterScreen = ({ navigation }) => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [address, setAddress] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [image, setImage] = useState(null);
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== "granted") {
+      Alert.alert("Sorry, we need camera roll permissions to make this work!");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const uploadImage = async (userId) => {
+    if (!image) return null;
+
+    // try {
+    //   const response = await fetch(image);
+    //   const blob = await response.blob();
+    //   const imageRef = ref(storage, `profileImages/${userId}`);
+    //   await uploadBytes(imageRef, blob);
+    //   return await getDownloadURL(imageRef);
+    // } catch (error) {
+    //   console.error("Error uploading image: ", error);
+    //   return null;
+    // }
+  };
 
   const handleSignUp = async () => {
     if (password !== confirmPassword) {
@@ -20,22 +72,26 @@ const UserRegisterScreen = ({ navigation }) => {
     }
 
     try {
-      const userCredentials = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredentials = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredentials.user;
 
-      // Send verification email
+      const imageUrl = await uploadImage(user.uid);
+
       await sendEmailVerification(user);
 
-      // Add user to Firestore
       await setDoc(doc(db, "users", user.uid), {
         firstName,
         lastName,
         email,
         address,
         role: "User",
+        profileImage: imageUrl,
       });
 
-      // Show alert and navigate back to LoginScreen
       Alert.alert(
         "Registration Successful",
         "Verification email sent! Please verify your account before logging in.",
@@ -54,7 +110,7 @@ const UserRegisterScreen = ({ navigation }) => {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}  // Offset to prevent overlap
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
     >
       <ScrollView contentContainerStyle={styles.scrollView}>
         <View style={styles.appBar}>
@@ -66,10 +122,15 @@ const UserRegisterScreen = ({ navigation }) => {
 
         <View style={styles.uploadContainer}>
           <Text style={styles.uploadLabel}>Profile Image</Text>
-          <TouchableOpacity style={styles.uploadButton}>
+          <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
             <Text style={styles.uploadButtonText}>Choose File</Text>
-            <Text style={styles.noFileText}>No File chosen</Text>
+            <Text style={styles.noFileText}>
+              {image ? "Image selected" : "No File chosen"}
+            </Text>
           </TouchableOpacity>
+          {image && (
+            <Image source={{ uri: image }} style={styles.previewImage} />
+          )}
         </View>
 
         <TextInput
@@ -116,7 +177,9 @@ const UserRegisterScreen = ({ navigation }) => {
           <Text style={styles.registerButtonText}>Register</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={goBack}>
-          <Text style={styles.signInText}>Already have an account? Sign in</Text>
+          <Text style={styles.signInText}>
+            Already have an account? Sign in
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -128,78 +191,84 @@ export default UserRegisterScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: "#f8f8f8",
   },
   scrollView: {
     flexGrow: 1,
     padding: 20,
   },
   appBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 15,
     paddingHorizontal: 10,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: "#f8f8f8",
     marginBottom: 20,
   },
   backButton: {
-    position: 'absolute',
+    position: "absolute",
     left: 10,
   },
   appBarTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: "bold",
+    color: "#000",
   },
   uploadContainer: {
     marginBottom: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   uploadLabel: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   uploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 5,
     marginTop: 10,
   },
   uploadButtonText: {
-    color: '#000',
+    color: "#000",
     marginRight: 10,
   },
   noFileText: {
-    color: '#777',
+    color: "#777",
   },
   input: {
     height: 50,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 15,
     marginVertical: 10,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   registerButton: {
     height: 50,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
     borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginVertical: 20,
   },
   registerButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
   },
   signInText: {
-    color: '#777',
-    textAlign: 'center',
+    color: "#777",
+    textAlign: "center",
+  },
+  previewImage: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    marginTop: 20,
   },
 });
