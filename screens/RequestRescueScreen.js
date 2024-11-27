@@ -15,6 +15,7 @@ import { getAllShops } from "../redux/shops/shopsActions";
 import { MapComponent } from "../components/map/MapComponent";
 import { useNavigation } from "@react-navigation/native";
 import { Marker, Polyline } from "react-native-maps";
+import { debounce } from "lodash"; // Import lodash for debouncing
 
 const RequestRescueScreen = () => {
   const navigation = useNavigation();
@@ -24,13 +25,32 @@ const RequestRescueScreen = () => {
   const [routeCoordinates, setRouteCoordinates] = useState([]); // State for route coordinates
   const [isRequestAccepted, setIsRequestAccepted] = useState(false); // State to track if the request is accepted
 
-  // Fetch all shops when the component is mounted
+  // Fetch all shops when the component is mounted and when the screen is focused
   useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      dispatch(getAllShops());
+    });
+
+    // Initial fetch when the component mounts
     dispatch(getAllShops());
-  }, [dispatch]);
+
+    return unsubscribe; // Cleanup the listener on unmount
+  }, [navigation, dispatch]);
 
   const shops = useSelector((state) => state.shops.shops);
   const userLocation = useSelector((state) => state.userLocation.currentLocation); // Get user's current location
+
+  // Debounce the map update function
+  const updateMap = debounce(() => {
+    // Logic to update the map with the current location
+    // This could be a function that updates the state or triggers a re-render
+  }, 1000); // Adjust the delay as needed
+
+  useEffect(() => {
+    if (userLocation) {
+      updateMap(); // Call the debounced function
+    }
+  }, [userLocation]);
 
   // Handle marker press event
   const handleMarkerPress = (shop) => {
@@ -67,9 +87,7 @@ const RequestRescueScreen = () => {
       </View>
       <TouchableOpacity
         style={styles.navigateButton}
-        onPress={() => {
-          navigation.navigate("Auto Repair Shop", { item });
-        }}
+        onPress={() => navigation.navigate("Auto Repair Shop", { item })}
       >
         <Ionicons name="arrow-forward" size={24} color="#000" />
       </TouchableOpacity>
@@ -78,39 +96,19 @@ const RequestRescueScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <AppBar />
-
-      <MapComponent>
-        {shops.map((shop) => {
-          const { longitude, latitude } = shop;
-          if (longitude && latitude) {
-            return (
-              <Marker
-                key={shop.id}
-                coordinate={{ longitude, latitude }}
-                title={shop.shopName}
-                description={shop.address}
-                pinColor="purple"
-                onPress={() => handleMarkerPress(shop)}
-              />
-            );
-          }
-          return null;
-        })}
-        
-        {/* Render polyline if routeCoordinates are available */}
-        {routeCoordinates.length > 0 && (
-          <Polyline coordinates={routeCoordinates} strokeColor="blue" strokeWidth={3} />
-        )}
-      </MapComponent>
-
-      {/* FlatList showing shops */}
+      <AppBar title="Request Rescue" />
+      <MapComponent
+        userLocation={userLocation}
+        shops={shops}
+        onMarkerPress={handleMarkerPress}
+        routeCoordinates={routeCoordinates}
+      />
       <FlatList
         ref={flatListRef}
-        style={styles.shopList}
         data={shops}
-        keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        style={styles.shopList}
       />
     </SafeAreaView>
   );
