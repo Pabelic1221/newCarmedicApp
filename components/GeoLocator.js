@@ -1,14 +1,17 @@
-import PropTypes from "prop-types";
 import * as Location from "expo-location";
-import { actions as userLocationActions } from "../redux/map/userLocation";
-import { useDispatch } from "react-redux";
 import { Alert } from "react-native";
 import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { actions as userLocationActions } from "../redux/map/userLocation";
+
 export default function GeoLocator({ children }) {
   const dispatch = useDispatch();
+
   useEffect(() => {
     let subscription;
+
     (async () => {
+      // Request permission to access location
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
@@ -19,6 +22,8 @@ export default function GeoLocator({ children }) {
         dispatch(userLocationActions.resetLocation());
         return;
       }
+
+      // Start watching the position
       subscription = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
@@ -26,19 +31,23 @@ export default function GeoLocator({ children }) {
           distanceInterval: 10,
         },
         (newLocation) => {
-          dispatch(userLocationActions.setCurrentLocation(newLocation.coords));
+          if (newLocation.coords) {
+            // Dispatch the new location to Redux store
+            dispatch(userLocationActions.setCurrentLocation(newLocation.coords));
+          } else {
+            Alert.alert("Location Error", "Unable to retrieve location.");
+          }
         }
       );
     })();
 
+    // Cleanup subscription on unmount
     return () => {
       if (subscription) {
         subscription.remove();
       }
     };
   }, [dispatch]);
-  return children;
+
+  return children; // Render children components
 }
-GeoLocator.propTypes = {
-  children: PropTypes.node.isRequired,
-};
