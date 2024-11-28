@@ -6,7 +6,13 @@ export const MapComponent = ({ children, ...props }) => {
   const { latitude, longitude } = useSelector(
     (state) => state.userLocation.currentLocation
   );
-  if (!longitude || !latitude) return <View>Map API Error</View>;
+  if (!longitude || !latitude) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading map...</Text>
+      </View>
+    );
+  }
   return (
     <View style={styles.mapContainer}>
       <MapView

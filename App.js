@@ -10,6 +10,7 @@ import UserProfile from "./screens/UserProfile";
 import ChatScreen from "./screens/ChatScreen";
 import ChatList from "./components/chat/ChatList";
 import UserRequestLogScreen from "./screens/UserRequestLogScreen";
+import ShopProfile from "./screens/ShopProfile";
 
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
@@ -72,7 +73,7 @@ export default function App() {
                 name="ShopRegister"
                 component={ShopRegisterScreen}
               />
-
+              <Stack.Screen name="ShopProfile" component={ShopProfile} /> 
               {/* Main App Navigation */}
               {userRole === "shop" && (
                 <Stack.Screen name="Main" component={DrawerNavigator} />

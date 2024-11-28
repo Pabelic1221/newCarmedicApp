@@ -81,7 +81,9 @@ const ARSHomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ShopAppBar />
+      <View style={{ zIndex: 999 }}>
+        <ShopAppBar />
+      </View>
 
       <MapComponent>
         {requests.map((request) => {

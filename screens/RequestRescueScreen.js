@@ -22,28 +22,37 @@ const RequestRescueScreen = () => {
   const [selectedShop, setSelectedShop] = useState(null);
   const flatListRef = useRef(null);
   const [routeCoordinates, setRouteCoordinates] = useState([]); // State for route coordinates
-  const [isRequestAccepted, setIsRequestAccepted] = useState(false); // State to track if the request is accepted
+  const [isRequestAccepted, setIsRequestAccepted] = useState(false);
+  const [error, setError] = useState(null);
 
   // Fetch all shops when the component is mounted
   useEffect(() => {
-    dispatch(getAllShops());
+    const fetchShops = async () => {
+      try {
+        setLoading(true);
+        await dispatch(getAllShops());
+      } catch (err) {
+        setError("Failed to load shops");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchShops();
   }, [dispatch]);
 
   const shops = useSelector((state) => state.shops.shops);
-  const userLocation = useSelector((state) => state.userLocation.currentLocation); // Get user's current location
+  const userLocation = useSelector((state) => state.userLocation.currentLocation);
 
   // Handle marker press event
   const handleMarkerPress = (shop) => {
     setSelectedShop(shop);
-
-    // Find the index of the selected shop in the shops array
     const index = shops.findIndex((s) => s.id === shop.id);
-
-    // Scroll to the corresponding index in the FlatList
     if (flatListRef.current && index !== -1) {
       flatListRef.current.scrollToIndex({ index, animated: true });
     }
   };
+
 
   // Render each shop item
   const renderItem = ({ item }) => (

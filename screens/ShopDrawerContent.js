@@ -6,6 +6,7 @@ import {
   StyleSheet,
   SafeAreaView,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { auth, db } from "../firebase";
@@ -13,42 +14,40 @@ import { signOut } from "firebase/auth";
 import { actions } from "../redux/user/user";
 import { useDispatch } from "react-redux";
 import { doc, getDoc } from "firebase/firestore"; // Firestore functions
-import { updateUserStatus } from "../redux/user/userActions";
 
 const ShopDrawerContent = memo((props) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [shopName, setShopName] = useState(""); // State to hold shopName
+  const [loading, setLoading] = useState(true); // State for loading indicator
 
   useEffect(() => {
     const fetchShopName = async () => {
-      const currentUser = auth.currentUser; // Get current user
-      if (currentUser) {
-        // Check if user is logged in
+      const currentUser  = auth.currentUser ; // Get current user
+      if (currentUser ) {
         try {
-          const shopDoc = await getDoc(doc(db, "shops", currentUser.uid));
+          const shopDoc = await getDoc(doc(db, "shops", currentUser .uid));
           if (shopDoc.exists()) {
             const shopData = shopDoc.data();
             setShopName(shopData.shopName); // Set shopName from Firestore
           }
         } catch (error) {
           console.error("Error fetching shopName: ", error);
+        } finally {
+          setLoading(false); // Stop loading after the fetch attempt
         }
+      } else {
+        setLoading(false); // Stop loading if no user is logged in
       }
     };
 
     fetchShopName();
-  }, []);
+  }, []); // Empty dependency array ensures this runs only once when the component mounts
 
   const handleSignOut = () => {
-    const currentUser = auth.currentUser; // Get current user
-    if (currentUser) {
-      // Check if user is logged in
-      dispatch(updateUserStatus(currentUser.uid, "offline")); // Update user status
-    }
     signOut(auth)
       .then(() => {
-        dispatch(actions.resetUser()); // Reset user state in Redux
+        dispatch(actions.resetUser ()); // Reset user state in Redux
         navigation.replace("Login");
       })
       .catch((error) => alert(error.message));
@@ -63,45 +62,47 @@ const ShopDrawerContent = memo((props) => {
         />
         <TouchableOpacity
           style={styles.userInfo}
-          onPress={() => navigation.navigate("UserProfile")}
+          onPress={() => navigation.navigate("ShopProfile")}
         >
-          {/* Replace email with shopName */}
           <Text style={styles.shopName}>{shopName || "Shop Name"}</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.drawerItemsContainer}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("Home")}
-          style={styles.drawerItem}
-        >
-          <Text style={styles.drawerItemText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("Chat List")}
-          style={styles.drawerItem}
-        >
-          <Text style={styles.drawerItemText}>Messages</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("Reviews")}
-          style={styles.drawerItem}
-        >
-          <Text style={styles.drawerItemText}>Reviews</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("Feedback")}
-          style={styles.drawerItem}
-        >
-          <Text style={styles.drawerItemText}>Feedback</Text>
-        </TouchableOpacity>
-      </View>
+      {loading ? (
+        <ActivityIndicator size="large" color="#000" style={styles.loader} />
+      ) : (
+        <View style={styles.drawerItemsContainer}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Home")}
+            style={styles.drawerItem}
+          >
+            <Text style={styles.drawerItemText}>Home</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Chat List")}
+            style={styles.drawerItem}
+          >
+            <Text style={styles.drawerItemText}>Messages</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Reviews")}
+            style={styles.drawerItem}
+          >
+            <Text style={styles.drawerItemText}>Reviews</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Feedback")}
+            style={styles.drawerItem}
+          >
+            <Text style={styles.drawerItemText}>Feedback</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       <TouchableOpacity onPress={handleSignOut} style={styles.logoutButton}>
         <Text style={styles.logoutButtonText}>Sign out</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
 });
-
 const styles = StyleSheet.create({
   container: {
     padding: 20,

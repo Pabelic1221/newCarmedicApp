@@ -17,7 +17,7 @@ const ShopAppBar = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.appBar}>
-        <TouchableOpacity onPress={() => navigation.openDrawer()}>
+      <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
           <Ionicons name="menu" size={30} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.appTitle}>CarMedic</Text>

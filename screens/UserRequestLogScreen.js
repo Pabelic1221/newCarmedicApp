@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, StyleSheet, SafeAreaView, Modal, TouchableOpacity } from "react-native"; // Import SafeAreaView
+import { View, Text, FlatList, StyleSheet, SafeAreaView, Modal, TouchableOpacity } from "react-native";
 import { useSelector } from "react-redux";
 import { db } from "../firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
@@ -17,10 +17,14 @@ const UserRequestLogScreen = () => {
         const q = query(requestsRef, where("userId", "==", currentUser .id));
         const querySnapshot = await getDocs(q);
 
+        // Fetch requests and sort them by timestamp
         const fetchedRequests = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
+
+        // Sort requests by timestamp in descending order
+        fetchedRequests.sort((a, b) => b.timestamp - a.timestamp);
 
         setRequests(fetchedRequests);
       }
@@ -33,7 +37,7 @@ const UserRequestLogScreen = () => {
     <TouchableOpacity style={styles.requestItem} onPress={() => setSelectedRequest(item)}>
       <Text style={styles.requestTitle}>Requests Tickets</Text>
       <Text style={styles.requestDate}>
-        Date: {new Date(item.timestamp).toLocaleDateString()}
+        Date: {new Date(item.timestamp).toLocaleDateString()} {new Date(item.timestamp).toLocaleTimeString()}
       </Text>
     </TouchableOpacity>
   );
@@ -65,7 +69,7 @@ const UserRequestLogScreen = () => {
                 <Text style={styles.modalText}>Description: {selectedRequest.description}</Text>
                 <Text style={styles.modalText}>Specific Problem: {selectedRequest.specificProblem}</Text>
                 <Text style={styles.modalText}>Status: {selectedRequest.state}</Text>
-                <Text style={styles.modalText}>Date: {new Date(selectedRequest.timestamp).toLocaleDateString()}</Text>
+                <Text style={styles.modalText}>Date: {new Date(selectedRequest.timestamp).toLocaleDateString()} {new Date(selectedRequest.timestamp).toLocaleTimeString()}</Text>
               </>
             )}
             <TouchableOpacity onPress={() => setSelectedRequest(null)} style={styles.closeButton}>
