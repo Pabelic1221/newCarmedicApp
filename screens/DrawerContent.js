@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { actions } from "../redux/user/user";
 import { useDispatch } from "react-redux";
 import { doc, getDoc } from "firebase/firestore"; // Import Firestore methods
 
-const DrawerContent = (props) => {
+const DrawerContent = memo((props) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [firstName, setFirstName] = useState(""); // State for first name
@@ -105,7 +105,7 @@ const DrawerContent = (props) => {
       </TouchableOpacity>
     </SafeAreaView>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

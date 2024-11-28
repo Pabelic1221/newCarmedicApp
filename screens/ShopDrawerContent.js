@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -15,17 +15,18 @@ import { useDispatch } from "react-redux";
 import { doc, getDoc } from "firebase/firestore"; // Firestore functions
 import { updateUserStatus } from "../redux/user/userActions";
 
-const ShopDrawerContent = (props) => {
+const ShopDrawerContent = memo((props) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [shopName, setShopName] = useState(""); // State to hold shopName
 
   useEffect(() => {
     const fetchShopName = async () => {
-      const currentUser  = auth.currentUser ; // Get current user
-      if (currentUser ) { // Check if user is logged in
+      const currentUser = auth.currentUser; // Get current user
+      if (currentUser) {
+        // Check if user is logged in
         try {
-          const shopDoc = await getDoc(doc(db, "shops", currentUser .uid));
+          const shopDoc = await getDoc(doc(db, "shops", currentUser.uid));
           if (shopDoc.exists()) {
             const shopData = shopDoc.data();
             setShopName(shopData.shopName); // Set shopName from Firestore
@@ -35,18 +36,19 @@ const ShopDrawerContent = (props) => {
         }
       }
     };
-  
+
     fetchShopName();
   }, []);
 
   const handleSignOut = () => {
-    const currentUser  = auth.currentUser ; // Get current user
-    if (currentUser ) { // Check if user is logged in
-      dispatch(updateUserStatus(currentUser .uid, "offline")); // Update user status
+    const currentUser = auth.currentUser; // Get current user
+    if (currentUser) {
+      // Check if user is logged in
+      dispatch(updateUserStatus(currentUser.uid, "offline")); // Update user status
     }
     signOut(auth)
       .then(() => {
-        dispatch(actions.resetUser ()); // Reset user state in Redux
+        dispatch(actions.resetUser()); // Reset user state in Redux
         navigation.replace("Login");
       })
       .catch((error) => alert(error.message));
@@ -98,7 +100,7 @@ const ShopDrawerContent = (props) => {
       </TouchableOpacity>
     </SafeAreaView>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

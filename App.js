@@ -64,8 +64,14 @@ export default function App() {
               {/* Authentication Stack */}
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Register" component={RegisterScreen} />
-              <Stack.Screen name="UserRegister" component={UserRegisterScreen} />
-              <Stack.Screen name="ShopRegister" component={ShopRegisterScreen} />
+              <Stack.Screen
+                name="UserRegister"
+                component={UserRegisterScreen}
+              />
+              <Stack.Screen
+                name="ShopRegister"
+                component={ShopRegisterScreen}
+              />
 
               {/* Main App Navigation */}
               {userRole === "shop" && (
@@ -78,7 +84,10 @@ export default function App() {
               {/* Chat Screen */}
               <Stack.Screen name="ChatScreen" component={ChatScreen} />
               <Stack.Screen name="ChatList" component={ChatList} />
-              <Stack.Screen name="UserRequestLog" component={UserRequestLogScreen}/>
+              <Stack.Screen
+                name="UserRequestLog"
+                component={UserRequestLogScreen}
+              />
             </Stack.Navigator>
           </NavigationContainer>
         </GeoLocator>

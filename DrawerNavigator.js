@@ -18,7 +18,9 @@ import AppBar from "./screens/AppBar";
 import TicketListener from "./components/map/Shops/TicketListener";
 import Chat from "./screens/ChatScreen";
 import ChatList from "./components/chat/ChatList";
-import UserRequestLogScreen from "./screens/UserRequestLogScreen"
+import UserRequestLogScreen from "./screens/UserRequestLogScreen";
+import LoginScreen from "./screens/LoginScreen";
+import LoadingScreen from "./screens/LoadingScreen";
 const Drawer = createDrawerNavigator();
 
 function DrawerNavigator() {
@@ -37,6 +39,7 @@ function DrawerNavigator() {
       screenOptions={{
         headerShown: false, // Hide headers for all drawer screens
         drawerType: "front",
+        unmountOnBlur: false,
         drawerStyle: {
           width: 250,
           backgroundColor: "#fff",
@@ -55,7 +58,9 @@ function DrawerNavigator() {
                   <ARSHomeScreen />
                 </TicketListener>
               )
-            : HomeScreen
+            : currentUser?.role === "User"
+            ? HomeScreen
+            : LoadingScreen
         }
       />
       {currentUser?.role !== "Shop" && (
