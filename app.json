@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Carmedic-app",
-    "slug": "Carmedic-app",
+    "name": "Carmedic",
+    "slug": "carmedic",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -26,7 +26,13 @@
         "googleMaps": {
           "apiKey": "AIzaSyDvYGYRHleXi7MNn7wzltiRfy4ze5T7IrY"
         }
-      }
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
