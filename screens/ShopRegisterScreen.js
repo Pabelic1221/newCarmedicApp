@@ -8,17 +8,13 @@ import {
   View,
   Alert,
   ScrollView,
+  Image,
 } from "react-native";
 import { MapComponent } from "../components/map/MapComponent";
-import {
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-} from "firebase/auth";
-import { auth, db } from "../firebase";
-import { doc, setDoc } from "firebase/firestore";
 import Icon from "react-native-vector-icons/Ionicons";
 import { Marker } from "react-native-maps";
 import { getAddressFromCoordinates } from "../helpers/maps/getAddress";
+import * as ImagePicker from "expo-image-picker";
 
 const ShopRegisterScreen = ({ navigation }) => {
   const [shopName, setShopName] = useState("");
@@ -26,52 +22,68 @@ const ShopRegisterScreen = ({ navigation }) => {
   const [address, setAddress] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
   const [markerLocation, setMarkerLocation] = useState(null);
+  const [profilePic, setProfilePic] = useState(null);
+  const [ownerIdPic, setOwnerIdPic] = useState(null);
 
   const handleMapPress = async (event) => {
     const { coordinate } = event.nativeEvent;
     setMarkerLocation(coordinate);
 
-    const address = await getAddressFromCoordinates(
+    const addr = await getAddressFromCoordinates(
       coordinate.latitude,
       coordinate.longitude
     );
-    setAddress(address);
+    setAddress(addr);
   };
 
-  const handleSignUp = () => {
-    if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+  const pickImage = async (setImage) => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const handleNext = () => {
+    if (
+      !shopName ||
+      !email ||
+      !password ||
+      !confirmPassword ||
+      !profilePic ||
+      !ownerIdPic
+    ) {
+      Alert.alert(
+        "Error",
+        "Please fill all the fields and upload the required images."
+      );
       return;
     }
 
-    createUserWithEmailAndPassword(auth, email, password)
-      .then(async (userCredentials) => {
-        const user = userCredentials.user;
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match!");
+      return;
+    }
 
-        // Send verification email
-        await sendEmailVerification(user);
+    const payload = {
+      shopName,
+      email,
+      address,
+      password,
+      latitude: markerLocation?.latitude || null,
+      longitude: markerLocation?.longitude || null,
+      profilePicUri: profilePic,
+      ownerIdPicUri: ownerIdPic,
+      role: "Shop",
+    };
 
-        // Add shop to Firestore
-        await setDoc(doc(db, "shops", user.uid), {
-          shopName: shopName,
-          email: email,
-          address: address,
-          role: "Shop",
-          verified: false,
-          latitude: markerLocation.latitude,
-          longitude: markerLocation.longitude,
-        });
-
-        // Alert and navigate back to login
-        Alert.alert(
-          "Registration Successful",
-          "Verification email sent! Please verify your account before logging in.",
-          [{ text: "OK", onPress: () => navigation.replace("Login") }]
-        );
-      })
-      .catch((error) => alert(error.message));
+    navigation.navigate("Specialties", { shopData: payload });
   };
 
   const goBack = () => {
@@ -94,27 +106,19 @@ const ShopRegisterScreen = ({ navigation }) => {
             value={shopName}
             onChangeText={setShopName}
             placeholder="Shop Name"
-            returnKeyType="next"
-            onSubmitEditing={() => this.emailInput.focus()} // Move focus to email input
           />
           <TextInput
-            ref={(input) => (this.emailInput = input)} // Set reference for email input
             style={styles.input}
             value={email}
             onChangeText={setEmail}
             placeholder="Email"
             autoCapitalize="none"
-            returnKeyType="next"
-            onSubmitEditing={() => this.addressInput.focus()} // Move focus to address input
           />
           <TextInput
-            ref={(input) => (this.addressInput = input)} // Set reference for address input
             style={styles.input}
             value={address}
             onChangeText={setAddress}
             placeholder="Address"
-            returnKeyType="next"
-            onSubmitEditing={() => this.passwordInput.focus()} // Move focus to password input
           />
           <MapComponent onPress={handleMapPress}>
             {markerLocation && (
@@ -125,30 +129,45 @@ const ShopRegisterScreen = ({ navigation }) => {
               />
             )}
           </MapComponent>
+
+          <TouchableOpacity
+            style={styles.imagePicker}
+            onPress={() => pickImage(setProfilePic)}
+          >
+            <Text>Select Profile Picture</Text>
+            {profilePic && (
+              <Image source={{ uri: profilePic }} style={styles.image} />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.imagePicker}
+            onPress={() => pickImage(setOwnerIdPic)}
+          >
+            <Text>Select Owner ID Picture</Text>
+            {ownerIdPic && (
+              <Image source={{ uri: ownerIdPic }} style={styles.image} />
+            )}
+          </TouchableOpacity>
+
           <TextInput
-            ref={(input) => (this.passwordInput = input)} // Set reference for password input
             style={styles.input}
             value={password}
             onChangeText={setPassword}
             placeholder="Password"
             secureTextEntry
-            returnKeyType="next"
-            onSubmitEditing={() => this.confirmPasswordInput.focus()} // Move focus to confirm password input
           />
           <TextInput
-            ref={(input) => (this.confirmPasswordInput = input)} // Set reference for confirm password input
             style={styles.input}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             placeholder="Confirm Password"
             secureTextEntry
-            returnKeyType="done"
-            onSubmitEditing={handleSignUp} // Trigger signup
           />
         </View>
 
-        <TouchableOpacity style={styles.registerButton} onPress={handleSignUp}>
-          <Text style={styles.registerButtonText}>Register</Text>
+        <TouchableOpacity style={styles.registerButton} onPress={handleNext}>
+          <Text style={styles.registerButtonText}>Next</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={goBack}>
           <Text style={styles.signInText}>
@@ -190,7 +209,7 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   inputContainer: {
-    marginTop: 60,
+    marginTop: 20,
     width: "100%",
     marginBottom: 20,
   },
@@ -219,8 +238,18 @@ const styles = StyleSheet.create({
     color: "#777",
     textAlign: "center",
   },
-  errorText: {
-    color: "red",
+  imagePicker: {
+    alignItems: "center",
     marginVertical: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    backgroundColor: "#eee",
+  },
+  image: {
+    width: 100,
+    height: 100,
+    marginTop: 10,
   },
 });

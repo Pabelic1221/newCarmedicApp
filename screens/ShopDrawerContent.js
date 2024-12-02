@@ -20,7 +20,7 @@ const ShopDrawerContent = memo((props) => {
   const dispatch = useDispatch();
   const [shopName, setShopName] = useState(""); // State to hold shopName
   const [loading, setLoading] = useState(true); // State for loading indicator
-
+  const [shop, setShop] = useState({});
   useEffect(() => {
     const fetchShopName = async () => {
       const currentUser = auth.currentUser; // Get current user
@@ -29,6 +29,7 @@ const ShopDrawerContent = memo((props) => {
           const shopDoc = await getDoc(doc(db, "shops", currentUser.uid));
           if (shopDoc.exists()) {
             const shopData = shopDoc.data();
+            setShop((prev) => ({ ...prev, ...shopData }));
             setShopName(shopData.shopName); // Set shopName from Firestore
           }
         } catch (error) {
@@ -57,7 +58,11 @@ const ShopDrawerContent = memo((props) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.userInfo}>
         <Image
-          source={{ uri: "https://via.placeholder.com/80" }}
+          source={{
+            uri: shop.profilePicUrl
+              ? shop.profilePicUrl
+              : "https://via.placeholder.com/80",
+          }}
           style={styles.profileImage}
         />
         <TouchableOpacity

@@ -7,62 +7,65 @@ import {
   FlatList,
   SafeAreaView,
   TouchableOpacity,
+  ActivityIndicator,
+  Image,
 } from "react-native";
-import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  getDocs,
-} from "firebase/firestore";
+import { getFirestore, collection, query, getDocs } from "firebase/firestore";
 import AppBar from "./AppBar";
 
 const ShopListScreen = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [shops, setShops] = useState([]);
   const [filteredShops, setFilteredShops] = useState([]);
+  const [loading, setLoading] = useState(true); // Add loading state
 
   useEffect(() => {
     const fetchShops = async () => {
-      const db = getFirestore();
+      try {
+        const db = getFirestore();
 
-      // Fetch shops data
-      const shopQuery = query(collection(db, "shops"));
-      const shopSnapshot = await getDocs(shopQuery);
-      const shopData = shopSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+        // Fetch shops data
+        const shopQuery = query(collection(db, "shops"));
+        const shopSnapshot = await getDocs(shopQuery);
+        const shopData = shopSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
 
-      console.log("Fetched Shops:", shopData); // Debug: Check what is fetched
+        console.log("Fetched Shops:", shopData); // Debug
 
-      // Fetch reviews data
-      const reviewQuery = query(collection(db, "reviews"));
-      const reviewSnapshot = await getDocs(reviewQuery);
-      const reviews = reviewSnapshot.docs.map((doc) => doc.data());
+        // Fetch reviews data
+        const reviewQuery = query(collection(db, "reviews"));
+        const reviewSnapshot = await getDocs(reviewQuery);
+        const reviews = reviewSnapshot.docs.map((doc) => doc.data());
 
-      // Calculate review count and average rating for each shop
-      const shopsWithReviews = shopData.map((shop) => {
-        const shopReviews = reviews.filter(
-          (review) => review.shopId === shop.id
-        );
+        // Calculate review count and average rating for each shop
+        const shopsWithReviews = shopData.map((shop) => {
+          const shopReviews = reviews.filter(
+            (review) => review.shopId === shop.id
+          );
 
-        const reviewCount = shopReviews.length;
-        const averageRating =
-          reviewCount > 0
-            ? shopReviews.reduce((sum, review) => sum + review.rating, 0) /
-              reviewCount
-            : 0;
+          const reviewCount = shopReviews.length;
+          const averageRating =
+            reviewCount > 0
+              ? shopReviews.reduce((sum, review) => sum + review.rating, 0) /
+                reviewCount
+              : 0;
 
-        return {
-          ...shop,
-          reviewCount,
-          averageRating: averageRating.toFixed(1), // Round to 1 decimal
-        };
-      });
+          return {
+            ...shop,
+            reviewCount,
+            averageRating: averageRating.toFixed(1), // Round to 1 decimal
+          };
+        });
 
-      setShops(shopsWithReviews);
-      filterShops(shopsWithReviews, searchTerm); // Initialize with filtered data
+        setShops(shopsWithReviews);
+        filterShops(shopsWithReviews, searchTerm);
+      } catch (error) {
+        console.error("Error fetching shops or reviews:", error);
+      } finally {
+        setLoading(false); // Stop loading after fetch
+      }
     };
 
     fetchShops();
@@ -70,7 +73,7 @@ const ShopListScreen = () => {
 
   useEffect(() => {
     filterShops(shops, searchTerm);
-  }, [searchTerm]); // React to changes in searchTerm
+  }, [searchTerm, shops]);
 
   const filterShops = (shops, term) => {
     if (term) {
@@ -81,14 +84,18 @@ const ShopListScreen = () => {
       );
       setFilteredShops(filtered);
     } else {
-      setFilteredShops(shops); // Show all shops if no searchTerm
+      setFilteredShops(shops);
     }
   };
 
   const renderItem = ({ item }) => (
     <View style={styles.listItem}>
       <View style={styles.iconWrapper}>
-        <View style={styles.icon} />
+        {item.profilePicUrl && item.profilePicUrl !== "" ? (
+          <Image source={{ uri: item.profilePicUrl }} style={styles.icon} />
+        ) : (
+          <View style={styles.icon} />
+        )}
       </View>
       <View style={styles.shopDetails}>
         <Text style={styles.shopName}>
@@ -100,7 +107,7 @@ const ShopListScreen = () => {
         <Text style={styles.shopInfo}>
           {item.reviewCount} {item.reviewCount !== 1 ? "reviews" : "review"},{" "}
           {item.averageRating <= 0
-            ? ""
+            ? "No ratings yet"
             : `Average Rating: ${item.averageRating}`}
         </Text>
       </View>
@@ -121,14 +128,20 @@ const ShopListScreen = () => {
           onChangeText={setSearchTerm}
         />
       </View>
-      <FlatList
-        data={filteredShops}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        ListEmptyComponent={
-          <Text style={styles.emptyMessage}>No shops found.</Text>
-        }
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
+      ) : (
+        <FlatList
+          data={filteredShops}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyMessage}>No shops found.</Text>
+            </View>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -170,10 +183,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   icon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: "#fff",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   shopDetails: {
     flex: 1,
@@ -190,9 +202,15 @@ const styles = StyleSheet.create({
   moreIcon: {
     marginRight: 10,
   },
+  emptyContainer: {
+    padding: 20,
+  },
   emptyMessage: {
     textAlign: "center",
     marginTop: 20,
     fontSize: 16,
+  },
+  loader: {
+    marginTop: 20,
   },
 });

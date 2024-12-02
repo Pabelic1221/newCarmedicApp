@@ -12,7 +12,6 @@ import { auth, db } from "../../firebase";
 import {
   collectionGroup,
   query,
-  where,
   orderBy,
   getDocs,
   getDoc,
@@ -45,57 +44,46 @@ const ChatList = () => {
       const chatList = [];
       const seenUserIds = new Set();
 
-      // Fetch all messages where the user is either the sender or receiver
       const messagesRef = collectionGroup(db, "messages");
       const allMessagesQuery = query(messagesRef, orderBy("createdAt", "desc"));
       const allMessagesSnapshot = await getDocs(allMessagesQuery);
 
-      // Loop through each message
       for (const msgDoc of allMessagesSnapshot.docs) {
         const messageData = msgDoc.data();
-        const senderId = messageData.user._id; // Sender's ID
-        const receiverId = msgDoc.ref.parent.parent.id; // Receiver's ID
+        const senderId = messageData.user._id;
+        const receiverId = msgDoc.ref.parent.parent.id;
 
-        // Determine if current user is sender or receiver
-        const isUserSender = senderId === userId;
-        const chatPartnerId = isUserSender ? receiverId : senderId;
+        if (senderId === userId || receiverId === userId) {
+          const chatPartnerId = senderId === userId ? receiverId : senderId;
 
-        // Skip if this chat partner is already processed
-        if (seenUserIds.has(chatPartnerId)) continue;
+          if (seenUserIds.has(chatPartnerId)) continue;
+          seenUserIds.add(chatPartnerId);
 
-        seenUserIds.add(chatPartnerId);
+          const partnerRef =
+            currentUser.role === "Shop"
+              ? doc(db, "users", chatPartnerId)
+              : doc(db, "shops", chatPartnerId);
 
-        // Check if currentUser exists before accessing its role
-        if (!currentUser) {
-          console.error("Current user is not defined");
-          return;
-        }
+          const partnerSnap = await getDoc(partnerRef);
 
-        // Fetch chat partner profile
-        const partnerRef =
-          currentUser.role === "Shop"
-            ? doc(db, "users", chatPartnerId)
-            : doc(db, "shops", chatPartnerId);
-
-        const partnerSnap = await getDoc(partnerRef);
-
-        if (partnerSnap.exists()) {
-          const partnerData = partnerSnap.data();
-          chatList.push({
-            id: chatPartnerId,
-            userName: partnerData.firstName
-              ? `${partnerData.firstName} ${partnerData.lastName}`
-              : partnerData.shopName,
-            userPhotoUrl: partnerData.photoUrl || "",
-            latestMessage: isUserSender
-              ? `You: ${messageData.text}`
-              : messageData.text,
-            latestMessageTimestamp: messageData.createdAt,
-          });
+          if (partnerSnap.exists()) {
+            const partnerData = partnerSnap.data();
+            chatList.push({
+              id: chatPartnerId,
+              userName: partnerData.firstName
+                ? `${partnerData.firstName} ${partnerData.lastName}`
+                : partnerData.shopName,
+              userPhotoUrl: partnerData.photoUrl || "",
+              latestMessage:
+                senderId === userId
+                  ? `You: ${messageData.text}`
+                  : messageData.text,
+              latestMessageTimestamp: messageData.createdAt,
+            });
+          }
         }
       }
 
-      // Sort chatList by latestMessageTimestamp in descending order
       chatList.sort(
         (a, b) =>
           b.latestMessageTimestamp.toMillis() -
@@ -110,14 +98,15 @@ const ChatList = () => {
 
   const renderChatItem = ({ item }) => (
     <TouchableOpacity
-      onPress={() => {
-        console.log(item.id);
-        navigation.navigate("Chat Screen", { receiverId: item.id });
-      }}
+      onPress={() =>
+        navigation.navigate("Chat Screen", { receiverId: item.id })
+      }
     >
       <View style={styles.chatItem}>
         <Image
-          source={{ uri: item.userPhotoUrl }}
+          source={{
+            uri: item.userPhotoUrl || "https://via.placeholder.com/50",
+          }}
           style={styles.profileImage}
         />
         <View style={styles.chatDetails}>
@@ -132,19 +121,24 @@ const ChatList = () => {
   );
 
   return (
-    <SafeAreaView>
-      {/* Check if currentUser is defined before rendering AppBar */}
+    <SafeAreaView style={styles.container}>
       {currentUser?.role === "Shop" ? <ShopAppBar /> : <AppBar />}
       <FlatList
         data={chats}
         keyExtractor={(item) => item.id}
         renderItem={renderChatItem}
+        ListEmptyComponent={
+          <Text style={styles.emptyMessage}>No chats available</Text>
+        }
       />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   chatItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -169,6 +163,12 @@ const styles = StyleSheet.create({
     color: "#888",
   },
   time: {
+    color: "#888",
+  },
+  emptyMessage: {
+    textAlign: "center",
+    marginTop: 20,
+    fontSize: 16,
     color: "#888",
   },
 });

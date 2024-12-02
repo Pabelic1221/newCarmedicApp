@@ -37,14 +37,11 @@ const AutoRepairShopsScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const [isModalVisible, setModalVisible] = useState(false);
-
   const shop = route.params.item;
-
   // Getting user's current location from Redux
   const { latitude, longitude } = useSelector(
     (state) => state.userLocation.currentLocation
   );
-
   const handleOpenRequestModal = () => {
     const distance = haversineDistance(
       latitude,
@@ -52,7 +49,6 @@ const AutoRepairShopsScreen = () => {
       shop.latitude,
       shop.longitude
     );
-
     if (distance > 10) {
       // Trigger alert if the distance is more than 10 km
       Alert.alert(
@@ -104,7 +100,11 @@ const AutoRepairShopsScreen = () => {
         <View style={styles.shopInfo}>
           <View style={styles.imageContainer}>
             <Image
-              source={{ uri: "https://via.placeholder.com/80" }}
+              source={{
+                uri: shop.profilePicUrl
+                  ? shop.profilePicUrl
+                  : "https://via.placeholder.com/80",
+              }}
               style={styles.shopImage}
             />
           </View>
@@ -114,6 +114,12 @@ const AutoRepairShopsScreen = () => {
               <Ionicons name="location-outline" size={16} color="gray" />
               {shop.address}
             </Text>
+            {shop.specialties && shop.specialties.length > 0 && (
+              <Text style={styles.shopSpecialties}>
+                <Ionicons name="list-outline" size={16} color="gray" />
+                Specialties: {shop.specialties.join(", ")}
+              </Text>
+            )}
           </View>
         </View>
 
@@ -289,6 +295,11 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     overflow: "scroll",
+  },
+  shopSpecialties: {
+    color: "gray",
+    marginTop: 5,
+    fontSize: 14,
   },
   reviewButton: {
     backgroundColor: "black",

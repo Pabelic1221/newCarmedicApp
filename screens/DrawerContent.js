@@ -18,7 +18,8 @@ const DrawerContent = memo((props) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [firstName, setFirstName] = useState(""); // State for first name
-  const [lastName, setLastName] = useState(""); // State for last name
+  const [lastName, setLastName] = useState("");
+  const [userData, setUserData] = useState({}); // State for last name
 
   useEffect(() => {
     const fetchUserNames = async () => {
@@ -29,7 +30,8 @@ const DrawerContent = memo((props) => {
         if (userSnapshot.exists()) {
           const data = userSnapshot.data();
           setFirstName(data.firstName); // Set the first name from Firestore
-          setLastName(data.lastName); // Set the last name from Firestore
+          setLastName(data.lastName);
+          setUserData((prev) => ({ ...prev, ...data })); // Set the last name from Firestore
         }
       }
     };
@@ -49,7 +51,11 @@ const DrawerContent = memo((props) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.userInfo}>
         <Image
-          source={{ uri: "https://via.placeholder.com/80" }}
+          source={{
+            uri: userData.profilePicUrl
+              ? userData.profilePicUrl
+              : "https://via.placeholder.com/80",
+          }}
           style={styles.profileImage}
         />
         <TouchableOpacity
@@ -80,6 +86,12 @@ const DrawerContent = memo((props) => {
           style={styles.drawerItem}
         >
           <Text style={styles.drawerItemText}>Auto Repair Shops</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("UserRequestLog")}
+          style={styles.drawerItem}
+        >
+          <Text style={styles.drawerItemText}>Request History</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => navigation.navigate("Chat List")}

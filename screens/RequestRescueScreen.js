@@ -82,7 +82,11 @@ const RequestRescueScreen = () => {
     <View style={styles.shopItem}>
       <View style={styles.shopInfo}>
         <Image
-          source={{ uri: "https://via.placeholder.com/50" }}
+          source={{
+            uri: item.profilePicUrl
+              ? item.profilePicUrl
+              : "https://via.placeholder.com/50",
+          }}
           style={styles.shopImage}
         />
         <View style={styles.shopDetails}>

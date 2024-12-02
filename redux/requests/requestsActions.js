@@ -32,11 +32,12 @@ export const getAllRequests = () => {
           const userDocRef = doc(db, "users", request.userId);
           const userDoc = await getDoc(userDocRef);
           if (userDoc.exists()) {
-            const { firstName, lastName } = userDoc.data();
+            const { firstName, lastName, profilePicUrl } = userDoc.data();
             return {
               ...request,
               firstName,
               lastName,
+              profilePicUrl,
             };
           }
 

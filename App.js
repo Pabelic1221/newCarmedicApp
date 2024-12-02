@@ -19,6 +19,7 @@ import GeoLocator from "./components/GeoLocator";
 import { View, Text } from "react-native";
 import { auth } from "./firebase"; // Assuming you're using Firebase for authentication
 import ARSHomeScreen from "./screens/ARSHomeScreen";
+import SpecialtiesScreen from "./screens/SpecialtiesScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -74,8 +75,6 @@ export default function App() {
                 name="ShopRegister"
                 component={ShopRegisterScreen}
               />
-              <Stack.Screen name="ARSHomeScreen" component={ARSHomeScreen} />
-              <Stack.Screen name="ShopProfile" component={ShopProfile} />
               {/* Main App Navigation */}
               {userRole === "shop" && (
                 <Stack.Screen name="Main" component={DrawerNavigator} />
@@ -87,10 +86,7 @@ export default function App() {
               {/* Chat Screen */}
               <Stack.Screen name="ChatScreen" component={ChatScreen} />
               <Stack.Screen name="ChatList" component={ChatList} />
-              <Stack.Screen
-                name="UserRequestLog"
-                component={UserRequestLogScreen}
-              />
+              <Stack.Screen name="Specialties" component={SpecialtiesScreen} />
             </Stack.Navigator>
           </NavigationContainer>
         </GeoLocator>

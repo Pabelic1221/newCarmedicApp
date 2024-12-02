@@ -18,7 +18,10 @@ const ShopAppBar = () => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.appBar}>
         <TouchableOpacity
-          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+          onPress={() => {
+            console.log("Pressing");
+            navigation.dispatch(DrawerActions.openDrawer());
+          }}
         >
           <Ionicons name="menu" size={30} color="#fff" />
         </TouchableOpacity>

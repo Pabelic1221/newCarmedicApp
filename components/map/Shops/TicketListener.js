@@ -48,12 +48,14 @@ const TicketListener = ({ children }) => {
               const userDoc = await getDoc(userDocRef);
 
               if (userDoc.exists()) {
-                const { firstName, lastName, email } = userDoc.data();
+                const { firstName, lastName, email, profilePicUrl } =
+                  userDoc.data();
                 return {
                   ...request,
                   firstName,
                   lastName,
                   email,
+                  profilePicUrl,
                 };
               }
 

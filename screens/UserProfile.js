@@ -17,7 +17,8 @@ import { useSelector } from "react-redux";
 import { launchImageLibrary } from "react-native-image-picker";
 import { doc, updateDoc } from "firebase/firestore";
 import AppBar from "./AppBar"; // Import your AppBar component
-
+import { uploadImageToCloudinary } from "../helpers/cloudinary";
+import * as ImagePicker from "expo-image-picker";
 const UserProfile = () => {
   const navigation = useNavigation();
   const [firstName, setFirstName] = useState("");
@@ -28,22 +29,24 @@ const UserProfile = () => {
   const [newPassword, setNewPassword] = useState("");
   const [profileImage, setProfileImage] = useState(null);
   const [isEdited, setIsEdited] = useState(false); // State to track if fields are edited
-  const currentUser  = useSelector((state) => state.user.currentUser );
+  const currentUser = useSelector((state) => state.user.currentUser);
 
   useEffect(() => {
     // Load current user data if available
-    if (currentUser ) {
-      setProfileImage(currentUser .profileImage || null);
-      setFirstName(currentUser .firstName || "");
-      setLastName(currentUser .lastName || "");
-      setContact(currentUser .contact || "");
-      setAddress(currentUser .address || "");
+    if (currentUser) {
+      setProfileImage(currentUser.profilePicUrl || null);
+      setFirstName(currentUser.firstName || "");
+      setLastName(currentUser.lastName || "");
+      setContact(currentUser.contact || "");
+      setAddress(currentUser.address || "");
     }
-  }, [currentUser ]);
+  }, [currentUser]);
 
   const handleImageUpload = async () => {
-    const result = await launchImageLibrary({
-      mediaType: 'photo',
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
       quality: 1,
     });
 
@@ -55,14 +58,15 @@ const UserProfile = () => {
   };
 
   const handleUpdateProfile = async () => {
-    const userDocRef = doc(db, "users", auth.currentUser .uid);
+    const userDocRef = doc(db, "users", auth.currentUser.uid);
     try {
+      const profilePicUrl = await uploadImageToCloudinary(profileImage);
       await updateDoc(userDocRef, {
         firstName,
         lastName,
         contact,
         address,
-        profileImage,
+        profilePicUrl,
       });
       Alert.alert("Success", "Profile updated successfully.");
       setIsEdited(false); // Reset edited state after saving
@@ -90,14 +94,19 @@ const UserProfile = () => {
         <View style={styles.profileImageContainer}>
           <TouchableOpacity onPress={handleImageUpload}>
             {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.profileImage} />
+              <Image
+                source={{ uri: profileImage }}
+                style={styles.profileImage}
+              />
             ) : (
               <View style={styles.placeholderImage}>
                 <Text style={styles.placeholderText}>Upload Image</Text>
               </View>
             )}
           </TouchableOpacity>
-          <Text style={styles.placeholderText}>Profile Picture: Tap to change</Text>
+          <Text style={styles.placeholderText}>
+            Profile Picture: Tap to change
+          </Text>
         </View>
 
         {/* Input Fields */}
@@ -130,7 +139,7 @@ const UserProfile = () => {
           placeholder="Current Password"
           secureTextEntry
           value={currentPassword}
- onChangeText={handleInputChange(setCurrentPassword)}
+          onChangeText={handleInputChange(setCurrentPassword)}
         />
         <TextInput
           style={styles.input}
@@ -142,7 +151,10 @@ const UserProfile = () => {
 
         {/* Conditionally render the Save Button */}
         {isEdited && (
-          <TouchableOpacity style={styles.saveButton} onPress={handleUpdateProfile}>
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={handleUpdateProfile}
+          >
             <Text style={styles.buttonText}>SAVE</Text>
           </TouchableOpacity>
         )}
@@ -162,13 +174,13 @@ const UserProfile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   innerContainer: {
     padding: 16,
   },
   profileImageContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
   },
   profileImage: {
@@ -180,37 +192,37 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#e0e0e0',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#e0e0e0",
+    justifyContent: "center",
+    alignItems: "center",
   },
   placeholderText: {
-    textAlign: 'center',
-    color: '#888',
+    textAlign: "center",
+    color: "#888",
   },
   input: {
     height: 40,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderWidth: 1,
     marginBottom: 12,
     paddingHorizontal: 10,
   },
   saveButton: {
-    backgroundColor: '#007BFF',
+    backgroundColor: "#007BFF",
     padding: 10,
-    alignItems: 'center',
+    alignItems: "center",
     borderRadius: 5,
   },
   requestLogButton: {
-    backgroundColor: '#28A745',
+    backgroundColor: "#28A745",
     padding: 10,
-    alignItems: 'center',
+    alignItems: "center",
     borderRadius: 5,
     marginTop: 10,
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
 

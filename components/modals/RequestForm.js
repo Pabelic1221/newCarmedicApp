@@ -88,14 +88,13 @@ export default function RequestForm({ shop, onClose }) {
       </TouchableOpacity>
       <Text style={styles.title}>Request</Text>
 
-      <Text style={styles.label}>Select Specific Problem</Text>
+      <Text style={styles.label}>Select Service Request</Text>
       <RNPickerSelect
         onValueChange={(value) => setProblem(value)}
-        items={[
-          { label: "Engine Issue", value: "engine" },
-          { label: "Brake Issue", value: "brake" },
-          { label: "Transmission Issue", value: "transmission" },
-        ]}
+        items={shop.specialties.map((specialties) => ({
+          label: specialties,
+          value: specialties,
+        }))}
         style={pickerSelectStyles}
         placeholder={{ label: "Select", value: null }}
       />
