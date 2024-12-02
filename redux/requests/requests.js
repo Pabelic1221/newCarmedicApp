@@ -2,6 +2,9 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   requests: [],
+  rescueRoute: [],
+  shopLocation: {},
+  requestLocation: {},
 };
 const productSlice = createSlice({
   name: "requests",
@@ -11,13 +14,18 @@ const productSlice = createSlice({
       state.requests = [...action.payload];
       return state;
     },
+    setRescueRoute: (state, action) => {
+      state.rescueRoute = action.payload;
+    },
+    setShopLocation: (state, action) => {
+      state.shopLocation = action.payload;
+    },
+    setRequestLocation: (state, action) => {
+      state.requestLocation = action.payload;
+    },
     updateRequests: (state, action) => {
-      console.log("payload", action.payload);
-      console.log("before", state.requests);
-
       state.requests = action.payload;
 
-      console.log("after", state.requests);
       return state;
     },
 

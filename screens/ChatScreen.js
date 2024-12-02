@@ -229,10 +229,12 @@ export default function Chat() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <SafeAreaView style={{ zIndex: 999, backgroundColor: '#000' }}>
-        {currentUser .role === "Shop" ? <ShopAppBar /> : <AppBar />}
+      <SafeAreaView style={{ zIndex: 999, backgroundColor: "#000" }}>
+        {currentUser.role === "Shop" ? <ShopAppBar /> : <AppBar />}
       </SafeAreaView>
-      <View style={{ flex: 1, paddingTop: 60 }}> {/* Adjust paddingTop based on your AppBar height */}
+      <View style={{ flex: 1, paddingTop: 60 }}>
+        {" "}
+        {/* Adjust paddingTop based on your AppBar height */}
         <View style={styles.header}>
           <Text style={styles.shopName}>{shopName}</Text>
           <View style={styles.statusIcon}>{getStatusIcon()}</View>

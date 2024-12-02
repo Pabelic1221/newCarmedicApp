@@ -18,7 +18,7 @@ export const MapComponent = ({ children, ...props }) => {
       <MapView
         style={styles.map}
         showsUserLocation={true}
-        region={{
+        initialRegion={{
           latitude,
           longitude,
           latitudeDelta: 0.0922,

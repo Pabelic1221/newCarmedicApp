@@ -13,7 +13,7 @@ import { useNavigation } from "@react-navigation/core";
 import { auth } from "../firebase";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { useDispatch } from "react-redux";
-import { getCurrentUser , updateUserStatus } from "../redux/user/userActions";
+import { getCurrentUser, updateUserStatus } from "../redux/user/userActions";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -28,10 +28,10 @@ const LoginScreen = () => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         if (user.emailVerified) {
-          dispatch(getCurrentUser ());
+          dispatch(getCurrentUser());
           dispatch(updateUserStatus(user.uid, "online"));
           console.log("User is already logged in with:", user.email);
-          navigation.replace("Main");
+          navigation.navigate("Main");
         } else {
           Alert.alert(
             "Email not verified",
@@ -58,16 +58,16 @@ const LoginScreen = () => {
       const user = userCredentials.user;
       console.log("User  logged in");
       if (user.emailVerified) {
-        dispatch(getCurrentUser ());
+        dispatch(getCurrentUser());
         dispatch(updateUserStatus(user.uid, "online"));
         console.log("Logged in with:", user.email);
-        
+
         // Set navigating to true before navigating
         setNavigating(true);
-        
+
         // Wait for a moment before navigating
         setTimeout(() => {
-          navigation.replace("Main");
+          navigation.navigate("Main");
         }, 1000); // Adjust the timeout duration as needed
       } else {
         Alert.alert(

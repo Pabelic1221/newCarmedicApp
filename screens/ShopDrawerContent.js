@@ -23,10 +23,10 @@ const ShopDrawerContent = memo((props) => {
 
   useEffect(() => {
     const fetchShopName = async () => {
-      const currentUser  = auth.currentUser ; // Get current user
-      if (currentUser ) {
+      const currentUser = auth.currentUser; // Get current user
+      if (currentUser) {
         try {
-          const shopDoc = await getDoc(doc(db, "shops", currentUser .uid));
+          const shopDoc = await getDoc(doc(db, "shops", currentUser.uid));
           if (shopDoc.exists()) {
             const shopData = shopDoc.data();
             setShopName(shopData.shopName); // Set shopName from Firestore
@@ -47,7 +47,7 @@ const ShopDrawerContent = memo((props) => {
   const handleSignOut = () => {
     signOut(auth)
       .then(() => {
-        dispatch(actions.resetUser ()); // Reset user state in Redux
+        dispatch(actions.resetUser()); // Reset user state in Redux
         navigation.replace("Login");
       })
       .catch((error) => alert(error.message));

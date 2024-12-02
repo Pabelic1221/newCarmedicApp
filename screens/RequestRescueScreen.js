@@ -7,54 +7,77 @@ import {
   Image,
   FlatList,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import AppBar from "./AppBar";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useSelector, useDispatch } from "react-redux";
 import { getAllShops } from "../redux/shops/shopsActions";
-import { MapComponent } from "../components/map/MapComponent";
 import { useNavigation } from "@react-navigation/native";
-import { Marker, Polyline } from "react-native-maps";
+import MapView, { Marker, Polyline } from "react-native-maps";
 
 const RequestRescueScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const [selectedShop, setSelectedShop] = useState(null);
+  const mapRef = useRef(null); // New useRef for MapView
   const flatListRef = useRef(null);
-  const [routeCoordinates, setRouteCoordinates] = useState([]); // State for route coordinates
-  const [isRequestAccepted, setIsRequestAccepted] = useState(false);
+  const [selectedShop, setSelectedShop] = useState(null);
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
   const [error, setError] = useState(null);
 
-  // Fetch all shops when the component is mounted
   useEffect(() => {
     const fetchShops = async () => {
       try {
-        setLoading(true);
         await dispatch(getAllShops());
+        fitAllMarkers(); // Fit markers after fetching shops
       } catch (err) {
         setError("Failed to load shops");
-      } finally {
-        setLoading(false);
+        Alert.alert("Error", "Failed to load shops. Please try again later.");
       }
     };
-    
+
     fetchShops();
   }, [dispatch]);
 
   const shops = useSelector((state) => state.shops.shops);
-  const userLocation = useSelector((state) => state.userLocation.currentLocation);
+  const userLocation = useSelector(
+    (state) => state.userLocation.currentLocation
+  );
 
-  // Handle marker press event
+  const fitAllMarkers = () => {
+    if (shops.length > 0 && mapRef.current) {
+      const coordinates = shops.map((shop) => ({
+        latitude: shop.latitude,
+        longitude: shop.longitude,
+      }));
+      mapRef.current.fitToCoordinates(coordinates, {
+        edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+        animated: true,
+      });
+    }
+  };
+
   const handleMarkerPress = (shop) => {
     setSelectedShop(shop);
     const index = shops.findIndex((s) => s.id === shop.id);
     if (flatListRef.current && index !== -1) {
       flatListRef.current.scrollToIndex({ index, animated: true });
     }
+
+    // Center map on the selected marker
+    if (mapRef.current) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: shop.latitude,
+          longitude: shop.longitude,
+          latitudeDelta: 0.02,
+          longitudeDelta: 0.02,
+        },
+        1000
+      );
+    }
   };
 
-
-  // Render each shop item
   const renderItem = ({ item }) => (
     <View style={styles.shopItem}>
       <View style={styles.shopInfo}>
@@ -69,7 +92,7 @@ const RequestRescueScreen = () => {
             <Ionicons name="star" size={18} color="#FFD700" />
             <Text style={styles.shopRating}>
               {item.averageRating?.toFixed(1) || "0.0"} ({item.reviewCount || 0}{" "}
-              {item.reviewCount <= 2 ? "review" : "reviews"})
+              {item.reviewCount <= 1 ? "review" : "reviews"})
             </Text>
           </View>
         </View>
@@ -85,11 +108,31 @@ const RequestRescueScreen = () => {
     </View>
   );
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <AppBar />
+  const renderMapView = () => {
+    if (!userLocation || !userLocation.latitude || !userLocation.longitude) {
+      return (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>
+            Loading map... Please ensure location services are enabled.
+          </Text>
+        </View>
+      );
+    }
 
-      <MapComponent>
+    return (
+      <MapView
+        ref={mapRef} // Attach mapRef here
+        style={styles.map}
+        initialRegion={{
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        }}
+        loadingEnabled={true}
+        showsUserLocation={true}
+        followsUserLocation={true}
+      >
         {shops.map((shop) => {
           const { longitude, latitude } = shop;
           if (longitude && latitude) {
@@ -106,14 +149,22 @@ const RequestRescueScreen = () => {
           }
           return null;
         })}
-        
-        {/* Render polyline if routeCoordinates are available */}
-        {routeCoordinates.length > 0 && (
-          <Polyline coordinates={routeCoordinates} strokeColor="blue" strokeWidth={3} />
-        )}
-      </MapComponent>
 
-      {/* FlatList showing shops */}
+        {routeCoordinates.length > 0 && (
+          <Polyline
+            coordinates={routeCoordinates}
+            strokeColor="blue"
+            strokeWidth={3}
+          />
+        )}
+      </MapView>
+    );
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <AppBar />
+      {renderMapView()}
       <FlatList
         ref={flatListRef}
         style={styles.shopList}
@@ -183,5 +234,20 @@ const styles = StyleSheet.create({
   },
   shopList: {
     margin: 15,
+  },
+  map: {
+    alignSelf: "center",
+    width: 300,
+    height: 400,
+    margin: 30,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#777",
   },
 });

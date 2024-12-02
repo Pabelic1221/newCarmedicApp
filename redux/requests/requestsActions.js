@@ -8,16 +8,18 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { actions } from "./requests";
+import { auth } from "../../firebase"; // Ensure you're importing auth properly
 
 export const getAllRequests = () => {
   return async (dispatch) => {
     try {
+      const currentUserId = auth.currentUser.uid; // Get the current user's ID
+      console.log("currentUser", auth.currentUser.uid);
       const requestsCollectionRef = collection(db, "requests");
-
-      // Query to fetch only pending and accepted requests
       const requestsQuery = query(
         requestsCollectionRef,
-        where("state", "in", ["pending", "accepted"])
+        where("state", "in", ["pending", "accepted"]),
+        where("storeId", "==", currentUserId)
       );
 
       const querySnapshot = await getDocs(requestsQuery);
@@ -26,10 +28,9 @@ export const getAllRequests = () => {
         querySnapshot.docs.map(async (document) => {
           const request = { id: document.id, ...document.data() };
 
-          // Fetch user's firstname and lastname using the userId from the request
+          // Fetch user info
           const userDocRef = doc(db, "users", request.userId);
           const userDoc = await getDoc(userDocRef);
-
           if (userDoc.exists()) {
             const { firstName, lastName } = userDoc.data();
             return {
@@ -43,8 +44,8 @@ export const getAllRequests = () => {
         })
       );
 
-      console.log("requests with user info: ", requests);
-      dispatch(actions.setRequests(requests));
+      console.log("Filtered requests with user info: ", requests);
+      dispatch(actions.setRequests(requests)); // Dispatch filtered requests
     } catch (error) {
       console.error("Error fetching requests: ", error);
     }

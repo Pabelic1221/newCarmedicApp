@@ -3,192 +3,235 @@ import {
   Text,
   View,
   SafeAreaView,
-  Image,
   FlatList,
   TouchableOpacity,
   Modal,
-  ScrollView,
+  Image,
 } from "react-native";
-import ShopAppBar from "./ShopAppBar"; // Import AppBar component
-import React, { useEffect, useState } from "react";
-import { Marker, Polyline } from "react-native-maps"; // Import Polyline
-import Ionicons from "react-native-vector-icons/Ionicons";
+import React, { useEffect, useRef, useState } from "react";
+import MapView, { Marker, Polyline } from "react-native-maps";
 import { useSelector, useDispatch } from "react-redux";
 import RequestTicket from "../components/modals/RequestTicket";
-import { MapComponent } from "../components/map/MapComponent";
-import { getAllRequests } from "../redux/requests/requestsActions";
 import EndTicket from "../components/modals/endTicketModal";
-import axios from "axios"; // Import axios for API requests
-import { useIsFocused } from '@react-navigation/native';
+import ShopAppBar from "./ShopAppBar";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import axios from "axios";
+import { getAllRequests } from "../redux/requests/requestsActions";
+import { useNavigation } from "@react-navigation/native";
+import TicketListener from "../components/map/Shops/TicketListener";
+import { actions } from "../redux/requests/requests";
+import Geolocation from "react-native-geolocation-service";
+import { PermissionsAndroid, Platform } from "react-native";
 
 const ARSHomeScreen = () => {
+  const navigation = useNavigation();
   const dispatch = useDispatch();
+  const mapRef = useRef(null); // Step 1: Create the mapRef
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [routeCoordinates, setRouteCoordinates] = useState([]); // State for route coordinates
-
-  useEffect(() => {
-    dispatch(getAllRequests());
-  }, [dispatch]);
 
   const requests = useSelector((state) => state.requests.requests);
-  const userLocation = useSelector((state) => state.userLocation.currentLocation); // Get user's current location
+  const userLocation = useSelector(
+    (state) => state.userLocation.currentLocation
+  );
 
-  const handleRequestPress = (request) => {
-    setSelectedRequest(request);
-    setModalVisible(true);
+  useEffect(() => {
+    const requestPermissions = async () => {
+      if (Platform.OS === "android") {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          console.error("Location permission denied");
+          return;
+        }
+      }
+
+      Geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          dispatch(actions.setCurrentLocation({ latitude, longitude }));
+        },
+        (error) => console.error("Error watching position", error),
+        {
+          enableHighAccuracy: true,
+          distanceFilter: 10,
+        }
+      );
+    };
+
+    requestPermissions();
+    dispatch(getAllRequests());
+
+    return () => {
+      Geolocation.stopObserving();
+    };
+  }, [dispatch]);
+
+  const handleRequestPress = async (request) => {
+    if (request.state === "accepted") {
+      const destination = {
+        latitude: request.latitude,
+        longitude: request.longitude,
+      };
+
+      if (userLocation) {
+        const url = `https://router.project-osrm.org/route/v1/driving/${userLocation.longitude},${userLocation.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson`;
+
+        try {
+          const response = await axios.get(url);
+          const route = response.data.routes[0].geometry.coordinates.map(
+            ([lon, lat]) => ({
+              latitude: lat,
+              longitude: lon,
+            })
+          );
+
+          dispatch(actions.setRequestLocation(destination));
+          dispatch(actions.setRescueRoute(route));
+
+          // Use mapRef to focus on the route
+          mapRef.current.fitToCoordinates(route, {
+            edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+            animated: true,
+          });
+
+          navigation.navigate("OngoingRequest", { request });
+        } catch (error) {
+          console.error("Error fetching route:", error);
+        }
+      } else {
+        console.error("User location is not available");
+      }
+    } else {
+      setSelectedRequest(request);
+      setModalVisible(true);
+    }
   };
 
   const handleCloseModal = () => {
     setModalVisible(false);
     setSelectedRequest(null);
-    setRouteCoordinates([]); // Reset route coordinates when closing the modal
   };
 
-  // Function to fetch route coordinates
-  const fetchRouteCoordinates = async (origin, destination) => {
-    const start = `${origin.longitude},${origin.latitude}`;
-    const end = `${destination.longitude},${destination.latitude}`;
-    const url = `https://router.project-osrm.org/route/v1/driving/${start};${end}?overview=full&geometries=geojson`;
-
-    try {
-      const response = await axios.get(url);
-      const route = response.data.routes[0].geometry.coordinates;
-
-      // Convert OSRM response [longitude, latitude] into Google Maps format {latitude, longitude}
-      const coordinates = route.map(([lon, lat]) => ({
-        latitude: lat,
-        longitude: lon,
-      }));
-
-      setRouteCoordinates(coordinates); // Update state with new route coordinates
-    } catch (error) {
-      console.error("Error fetching route:", error);
+  const renderMapView = () => {
+    if (!userLocation || !userLocation.latitude || !userLocation.longitude) {
+      return (
+        <Text>Map loading... Please ensure location services are enabled.</Text>
+      );
     }
-  };
 
-  // Accept request and fetch route coordinates
-  const handleAcceptRequest = () => {
-    if (selectedRequest) {
-      const destination = {
-        latitude: selectedRequest.latitude,
-        longitude: selectedRequest.longitude,
-      };
-      fetchRouteCoordinates(userLocation, destination); // Fetch route coordinates
-      setModalVisible(false); // Close the modal
-    }
+    return (
+      <MapView
+        ref={mapRef} // Step 2: Attach mapRef
+        style={styles.map}
+        initialRegion={{
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        }}
+        showsUserLocation={true}
+        loadingEnabled={true}
+        loadingIndicatorColor="#666666"
+        loadingBackgroundColor="#eeeeee"
+        moveOnMarkerPress={false}
+        showsCompass={true}
+        showsPointsOfInterest={false}
+        provider="google"
+      >
+        {requests.map((request) => (
+          <Marker
+            key={request.id}
+            coordinate={{
+              latitude: request.latitude,
+              longitude: request.longitude,
+            }}
+            title={request.firstName}
+            description={request.specificProblem}
+            pinColor="purple"
+            onPress={() => handleRequestPress(request)}
+          />
+        ))}
+      </MapView>
+    );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={{ zIndex: 999 }}>
+    <TicketListener>
+      <SafeAreaView style={styles.container}>
         <ShopAppBar />
-      </View>
-
-      <MapComponent>
-        {requests.map((request) => {
-          const { longitude, latitude } = request;
-          if (longitude && latitude) {
-            return (
-              <Marker
-                key={request.id}
-                coordinate={{ longitude, latitude }}
-                title={request.firstName}
-                description={request.specificProblem}
-                pinColor="purple"
-                onPress={() => handleRequestPress(request)} // Open modal on marker press
-              />
-            );
-          }
-          return null;
-        })}
-        {/* Render polyline if routeCoordinates are available */}
-        {routeCoordinates.length > 0 && (
-          <Polyline coordinates={routeCoordinates} strokeColor="blue" strokeWidth={3} />
-        )}
-      </MapComponent>
-
-      <Text style={styles.heading}>Pending Requests</Text>
-
-      <FlatList
-        style={styles.requestList}
-        data={requests}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.requestItem}>
-            <View style={styles.requestInfo}>
-              {/* Circular Placeholder for Avatar */}
-              <Image
-                source={{ uri: "https://via.placeholder.com/50" }}
-                style={styles.requestImage}
-              />
-              <View style={styles.requestDetails}>
-                {/* User's Name */}
-                <Text style={styles.requestName}>
-                  {item.firstName} {item.lastName}
-                </Text>
-
-                {/* Problem Description */}
-                <Text style={styles.problemText}>
-                  Concern: {item.specificProblem}
-                </Text>
-
-                {/* Request Status */}
-                <Text style={styles.statusText}>{item.state}</Text>
+        {renderMapView()}
+        <Text style={styles.heading}>Pending Requests</Text>
+        <FlatList
+          style={styles.requestList}
+          data={requests}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.requestItem}>
+              <View style={styles.requestInfo}>
+                <Image
+                  source={{ uri: "https://via.placeholder.com/50" }}
+                  style={styles.requestImage}
+                />
+                <View style={styles.requestDetails}>
+                  <Text style={styles.requestName}>
+                    {item.firstName} {item.lastName}
+                  </Text>
+                  <Text style={styles.problemText}>
+                    Concern: {item.specificProblem}
+                  </Text>
+                  <Text style={styles.statusText}>{item.state}</Text>
+                </View>
               </View>
+              <TouchableOpacity
+                style={styles.navigateButton}
+                onPress={() => {
+                  handleRequestPress(item);
+                }}
+              >
+                <Ionicons name="arrow-forward" size={24} color="#000" />
+              </TouchableOpacity>
             </View>
-
-            {/* Button to Navigate to Request Details */}
-            <TouchableOpacity
-              style={styles.navigateButton}
-              onPress={() => {
-                handleRequestPress(item);
-              }}
-            >
-              <Ionicons name="arrow-forward" size={24} color="#000" />
-            </TouchableOpacity>
-          </View>
-        )}
-      />
-
-      {/* Modal for Request Form */}
-      <Modal
-        visible={isModalVisible}
-        onRequestClose={handleCloseModal} // This ensures that the modal can be closed by back press on Android
-        transparent={true}
-        animationType="slide"
-      >
-        {/* Render modal content only if a request is selected */}
-        {selectedRequest ? (
-          selectedRequest.state === "accepted" ? (
-            <EndTicket request={selectedRequest} onClose={handleCloseModal} />
+          )}
+        />
+        <Modal
+          visible={isModalVisible}
+          onRequestClose={handleCloseModal}
+          transparent={true}
+          animationType="slide"
+        >
+          {selectedRequest ? (
+            selectedRequest.state === "accepted" ? (
+              <EndTicket request={selectedRequest} onClose={handleCloseModal} />
+            ) : (
+              <RequestTicket
+                request={selectedRequest}
+                onClose={handleCloseModal}
+              />
+            )
           ) : (
-            <RequestTicket
-              request={selectedRequest}
-              onClose={handleCloseModal}
-              onAcceptRequest={handleAcceptRequest} // Pass the accept function to RequestTicket
-            />
-          )
-        ) : (
-          <View>
-            <Text>No request selected</Text>
-          </View>
-        )}
-      </Modal>
-    </SafeAreaView>
+            <View>
+              <Text>No request selected</Text>
+            </View>
+          )}
+        </Modal>
+      </SafeAreaView>
+    </TicketListener>
   );
 };
 
 export default ARSHomeScreen;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f2f2f2",
   },
   map: {
-    height: 200,
-    width: "100%",
+    alignSelf: "center",
+    width: 300,
+    height: 400,
+    margin: 30,
   },
   heading: {
     fontSize: 18,

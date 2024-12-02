@@ -9,10 +9,8 @@ const UserChecker = ({ children }) => {
 
   useEffect(() => {
     if (currentUser) {
-      if (currentUser.role === "User") {
-        navigation.replace("Main");
-      } else if (currentUser.role === "Shop") {
-        navigation.replace("ARSHomeScreen");
+      if (currentUser.role === "User" || currentUser.role === "Shop") {
+        navigation.navigate("Main");
       }
     } else {
       navigation.replace("Login");

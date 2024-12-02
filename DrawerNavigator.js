@@ -22,6 +22,7 @@ import UserRequestLogScreen from "./screens/UserRequestLogScreen";
 import ShopProfile from "./screens/ShopProfile";
 import LoadingScreen from "./screens/LoadingScreen";
 import ShopAppBar from "./screens/ShopAppBar";
+import OngoingRequestScreen from "./screens/OngoingRescueScreen";
 const Drawer = createDrawerNavigator();
 
 function DrawerNavigator() {
@@ -29,6 +30,7 @@ function DrawerNavigator() {
 
   return (
     <Drawer.Navigator
+      detachInactiveScreens={false}
       // Conditionally choose between ShopDrawerContent and DrawerContent
       drawerContent={(props) =>
         currentUser?.role === "Shop" ? (
@@ -40,6 +42,7 @@ function DrawerNavigator() {
       screenOptions={{
         headerShown: false, // Hide headers for all drawer screens
         drawerType: "front",
+
         unmountOnBlur: false,
         drawerStyle: {
           width: 250,
@@ -54,19 +57,15 @@ function DrawerNavigator() {
         name="Home"
         component={
           currentUser?.role === "Shop"
-            ? () => (
-                <TicketListener>
-                  <ARSHomeScreen />
-                </TicketListener>
-              )
+            ? ARSHomeScreen
             : currentUser?.role === "User"
             ? HomeScreen
             : LoadingScreen
         }
       />
-      {currentUser?.role !== "Shop" && (
-        <Drawer.Screen name="Request" component={RequestRescueScreen} />
-      )}
+
+      <Drawer.Screen name="Request" component={RequestRescueScreen} />
+
       <Drawer.Screen name="Auto Repair Shops" component={ShopListScreen} />
       <Drawer.Screen name="Reviews" component={ReviewsScreen} />
       <Drawer.Screen name="Auto Repair Shop" component={AutoRepairShopScreen} />
@@ -75,9 +74,8 @@ function DrawerNavigator() {
       <Drawer.Screen name="Chat List" component={ChatList} />
       <Drawer.Screen name="UserProfile" component={UserProfile} />
       <Drawer.Screen name="ShopProfile" component={ShopProfile} />
-      <Drawer.Screen name="AppBar" component={AppBar} />
       <Drawer.Screen name="UserRequestLog" component={UserRequestLogScreen} />
-      <Drawer.Screen name="ShopAppBar" component={ShopAppBar}/>
+      <Drawer.Screen name="OngoingRequest" component={OngoingRequestScreen} />
     </Drawer.Navigator>
   );
 }
