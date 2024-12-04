@@ -20,33 +20,18 @@ import { View, Text } from "react-native";
 import { auth } from "./firebase"; // Assuming you're using Firebase for authentication
 import ARSHomeScreen from "./screens/ARSHomeScreen";
 import SpecialtiesScreen from "./screens/SpecialtiesScreen";
+import Chat from "./screens/ChatScreen";
+import FeedbackScreen from "./screens/FeedbackScreen";
+import AutoRepairShopsScreen from "./screens/AutoRepairShopScreen";
+import ReviewsScreen from "./screens/ReviewsScreen";
+import ShopListScreen from "./screens/ShopListScreen";
+import OngoingRequestScreen from "./screens/OngoingRescueScreen";
+import RequestRescueScreen from "./screens/RequestRescueScreen";
+import HomeScreen from "./screens/HomeScreen";
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        const role = await getUserRole(user.uid); // Fetch the user role
-        setUserRole(role);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  if (loading) {
-    return (
-      <View>
-        <Text>Loading...</Text>
-      </View>
-    ); // Show a loading screen while checking user role
-  }
-
   return (
     <Provider store={store}>
       <PersistGate
@@ -75,30 +60,33 @@ export default function App() {
                 name="ShopRegister"
                 component={ShopRegisterScreen}
               />
-              {/* Main App Navigation */}
-              {userRole === "shop" && (
-                <Stack.Screen name="Main" component={DrawerNavigator} />
-              )}
-              {userRole === "user" && (
-                <Stack.Screen name="UserProfile" component={UserProfile} />
-              )}
-
-              {/* Chat Screen */}
-              <Stack.Screen name="ChatScreen" component={ChatScreen} />
+              <Stack.Screen name="ShopHome" component={ARSHomeScreen} />
+              <Stack.Screen name="Home" component={HomeScreen} />
               <Stack.Screen name="ChatList" component={ChatList} />
               <Stack.Screen name="Specialties" component={SpecialtiesScreen} />
+              <Stack.Screen name="Request" component={RequestRescueScreen} />
+              <Stack.Screen name="AutoRepairShops" component={ShopListScreen} />
+              <Stack.Screen name="Reviews" component={ReviewsScreen} />
+              <Stack.Screen
+                name="AutoRepairShop"
+                component={AutoRepairShopsScreen}
+              />
+              <Stack.Screen name="Feedback" component={FeedbackScreen} />
+              <Stack.Screen name="Chat" component={Chat} />
+              <Stack.Screen name="UserProfile" component={UserProfile} />
+              <Stack.Screen name="ShopProfile" component={ShopProfile} />
+              <Stack.Screen
+                name="UserRequestLog"
+                component={UserRequestLogScreen}
+              />
+              <Stack.Screen
+                name="OngoingRequest"
+                component={OngoingRequestScreen}
+              />
             </Stack.Navigator>
           </NavigationContainer>
         </GeoLocator>
       </PersistGate>
     </Provider>
   );
-}
-
-// Function to get user role from your database
-async function getUserRole(uid) {
-  // Implement your logic to fetch the user role from your database
-  // This is a placeholder function
-  // You would typically query your database here and return the role
-  return "shop"; // or "user" based on the user's role
 }

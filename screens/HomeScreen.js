@@ -11,6 +11,7 @@ import { useNavigation } from "@react-navigation/native";
 import AppBar from "./AppBar"; // Import AppBar component
 import { useSelector } from "react-redux";
 import PropTypes from "prop-types";
+import BottomAppBar from "../components/BottomAppBar";
 const HomeScreen = () => {
   const navigation = useNavigation(); // Initialize navigation
 
@@ -59,6 +60,7 @@ const HomeScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
+      <BottomAppBar />
     </SafeAreaView>
   );
 };

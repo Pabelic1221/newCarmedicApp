@@ -65,7 +65,6 @@ function DrawerNavigator() {
       />
 
       <Drawer.Screen name="Request" component={RequestRescueScreen} />
-
       <Drawer.Screen name="Auto Repair Shops" component={ShopListScreen} />
       <Drawer.Screen name="Reviews" component={ReviewsScreen} />
       <Drawer.Screen name="Auto Repair Shop" component={AutoRepairShopScreen} />

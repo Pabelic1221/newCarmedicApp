@@ -104,7 +104,7 @@ const RequestRescueScreen = () => {
       <TouchableOpacity
         style={styles.navigateButton}
         onPress={() => {
-          navigation.navigate("Auto Repair Shop", { item });
+          navigation.navigate("AutoRepairShop", { item });
         }}
       >
         <Ionicons name="arrow-forward" size={24} color="#000" />

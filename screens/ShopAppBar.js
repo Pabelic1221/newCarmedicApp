@@ -17,14 +17,6 @@ const ShopAppBar = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.appBar}>
-        <TouchableOpacity
-          onPress={() => {
-            console.log("Pressing");
-            navigation.dispatch(DrawerActions.openDrawer());
-          }}
-        >
-          <Ionicons name="menu" size={30} color="#fff" />
-        </TouchableOpacity>
         <Text style={styles.appTitle}>CarMedic</Text>
         <TouchableOpacity onPress={() => navigation.navigate("Chat List")}>
           <Ionicons name="chatbubble-outline" size={30} color="#fff" />

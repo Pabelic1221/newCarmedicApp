@@ -12,7 +12,7 @@ import {
 import { useNavigation } from "@react-navigation/core";
 import { auth } from "../firebase";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { getCurrentUser, updateUserStatus } from "../redux/user/userActions";
 
 const LoginScreen = () => {
@@ -22,6 +22,7 @@ const LoginScreen = () => {
   const [navigating, setNavigating] = useState(false); // State for navigation loading
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const { currentUser } = useSelector((state) => state.user);
 
   // Check if a user is already logged in when the app loads
   useEffect(() => {
@@ -31,7 +32,9 @@ const LoginScreen = () => {
           dispatch(getCurrentUser());
           dispatch(updateUserStatus(user.uid, "online"));
           console.log("User is already logged in with:", user.email);
-          navigation.navigate("Main");
+          currentUser?.role === "Shop"
+            ? navigation.navigate("ShopHome")
+            : navigation.navigate("Home");
         } else {
           Alert.alert(
             "Email not verified",
@@ -65,9 +68,12 @@ const LoginScreen = () => {
         // Set navigating to true before navigating
         setNavigating(true);
 
-        // Wait for a moment before navigating
         setTimeout(() => {
-          navigation.navigate("Main");
+          if (currentUser?.role || currentUser?.role === "") {
+            currentUser?.role === "Shop"
+              ? navigation.navigate("ShopHome")
+              : navigation.navigate("Home");
+          }
         }, 1000); // Adjust the timeout duration as needed
       } else {
         Alert.alert(

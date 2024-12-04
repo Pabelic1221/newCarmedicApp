@@ -22,6 +22,7 @@ import TicketListener from "../components/map/Shops/TicketListener";
 import { actions } from "../redux/requests/requests";
 import Geolocation from "react-native-geolocation-service";
 import { PermissionsAndroid, Platform } from "react-native";
+import ShopBottomAppBar from "../components/ShopBottomAppBar";
 
 const ARSHomeScreen = () => {
   const navigation = useNavigation();
@@ -123,7 +124,6 @@ const ARSHomeScreen = () => {
 
     return (
       <MapView
-        ref={mapRef} // Step 2: Attach mapRef
         style={styles.map}
         initialRegion={{
           latitude: userLocation.latitude,
@@ -137,8 +137,6 @@ const ARSHomeScreen = () => {
         loadingBackgroundColor="#eeeeee"
         moveOnMarkerPress={false}
         showsCompass={true}
-        showsPointsOfInterest={false}
-        provider="google"
       >
         {requests.map((request) => (
           <Marker
@@ -216,6 +214,7 @@ const ARSHomeScreen = () => {
             </View>
           )}
         </Modal>
+        <ShopBottomAppBar />
       </SafeAreaView>
     </TicketListener>
   );

@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
-import { DrawerActions } from '@react-navigation/native';
+import { DrawerActions } from "@react-navigation/native";
 
 const AppBar = () => {
   const navigation = useNavigation();
@@ -19,11 +19,12 @@ const AppBar = () => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.appBar}>
         {/* Use DrawerActions to open the drawer */}
-        <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
-          <Ionicons name="menu" size={30} color="#fff" />
-        </TouchableOpacity>
         <Text style={styles.appTitle}>CarMedic</Text>
-        <TouchableOpacity onPress={() => { navigation.navigate("Auto Repair Shops") }}>
+        <TouchableOpacity
+          onPress={() => {
+            navigation.navigate("Auto Repair Shops");
+          }}
+        >
           <Ionicons name="search" size={30} color="#fff" />
         </TouchableOpacity>
       </View>
