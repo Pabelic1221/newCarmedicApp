@@ -42,36 +42,40 @@ export const getCurrentUser = () => {
     }
   };
 };
-export const updateUserStatus = (userId, status) => async (dispatch) => {
-  try {
-    console.log("USER UPDATE", userId);
 
-    // First, try to get the user document from the 'users' collection
-    let userDocRef = doc(db, "users", userId);
-    let userSnapshot = await getDoc(userDocRef);
+export const updateUserStatus =
+  (userId, status, fcmToken) => async (dispatch) => {
+    try {
+      console.log("USER UPDATE", userId);
 
-    if (userSnapshot.exists()) {
-      // If user document exists, update the status
-      await updateDoc(userDocRef, {
-        status: status,
-      });
-      console.log("User status updated in 'users' collection");
-    } else {
-      // If not found in 'users', try the 'shops' collection
-      userDocRef = doc(db, "shops", userId);
-      const shopSnapshot = await getDoc(userDocRef);
+      // First, try to get the user document from the 'users' collection
+      let userDocRef = doc(db, "users", userId);
+      let userSnapshot = await getDoc(userDocRef);
 
-      if (shopSnapshot.exists()) {
-        // If shop document exists, update the status
+      if (userSnapshot.exists()) {
+        // If user document exists, update the status and FCM token
         await updateDoc(userDocRef, {
           status: status,
+          fcmToken: fcmToken, // Add or update the FCM token
         });
-        console.log("User status updated in 'shops' collection");
+        console.log("User status updated in 'users' collection");
       } else {
-        console.log("No such user or shop document!");
+        // If not found in 'users', try the 'shops' collection
+        userDocRef = doc(db, "shops", userId);
+        const shopSnapshot = await getDoc(userDocRef);
+
+        if (shopSnapshot.exists()) {
+          // If shop document exists, update the status and FCM token
+          await updateDoc(userDocRef, {
+            status: status,
+            fcmToken: fcmToken, // Add or update the FCM token
+          });
+          console.log("User status updated in 'shops' collection");
+        } else {
+          console.log("No such user or shop document!");
+        }
       }
+    } catch (error) {
+      console.error("Error updating user status:", error);
     }
-  } catch (error) {
-    console.error("Error updating user status:", error);
-  }
-};
+  };

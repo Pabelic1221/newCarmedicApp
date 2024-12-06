@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   collection,
   onSnapshot,
@@ -10,10 +10,18 @@ import {
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../../../firebase"; // Import auth from firebase config
-import { actions } from "../../../redux/requests/requests";
+import { actions, updateRequests } from "../../../redux/requests/requests";
 import PropTypes from "prop-types";
+import { getAllRequests } from "../../../redux/requests/requestsActions";
+import { fetchAllRequests } from "../../../redux/requests/requestsThunk";
 
 const TicketListener = ({ children }) => {
+  const requests = useSelector((state) => state.requests.requests);
+  useEffect(() => {
+    if (requests.length === 0) {
+      dispatch(fetchAllRequests());
+    }
+  });
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -64,7 +72,7 @@ const TicketListener = ({ children }) => {
             })
           );
 
-          dispatch(actions.updateRequests(requestsWithUserDetails));
+          dispatch(updateRequests(requestsWithUserDetails));
         } catch (error) {
           console.error("Error fetching data:", error);
         }

@@ -1,21 +1,36 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { fetchAllShops } from "./shopsThunk";
 
 const initialState = {
   shops: [],
+  loading: false,
+  error: null,
 };
-const productSlice = createSlice({
+
+const shopSlice = createSlice({
   name: "shops",
-  initialState: initialState,
+  initialState,
   reducers: {
-    setShops: (state, action) => {
-      state.shops = [...action.payload];
-      return state;
-    },
     resetShops: (state) => {
       Object.assign(state, initialState);
     },
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchAllShops.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllShops.fulfilled, (state, action) => {
+        state.loading = false;
+        state.shops = action.payload;
+      })
+      .addCase(fetchAllShops.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+  },
 });
 
-export const reducer = productSlice.reducer;
-export const actions = productSlice.actions;
+export const { resetShops } = shopSlice.actions;
+export const reducer = shopSlice.reducer;

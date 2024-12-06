@@ -8,7 +8,7 @@ import {
   Modal,
   Image,
 } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { useSelector, useDispatch } from "react-redux";
 import RequestTicket from "../components/modals/RequestTicket";
@@ -19,9 +19,9 @@ import axios from "axios";
 import { getAllRequests } from "../redux/requests/requestsActions";
 import { useNavigation } from "@react-navigation/native";
 import TicketListener from "../components/map/Shops/TicketListener";
-import { actions } from "../redux/requests/requests";
-import Geolocation from "react-native-geolocation-service";
+import { actions, setRequestLocation } from "../redux/requests/requests";
 import { PermissionsAndroid, Platform } from "react-native";
+import { fetchAllRequests } from "../redux/requests/requestsThunk";
 
 const ARSHomeScreen = () => {
   const navigation = useNavigation();
@@ -30,92 +30,33 @@ const ARSHomeScreen = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
-  const requests = useSelector((state) => state.requests.requests);
-  const userLocation = useSelector(
-    (state) => state.userLocation.currentLocation
-  );
+  const { requests, loading } = useSelector((state) => state.requests);
 
-  useEffect(() => {
-    const requestPermissions = async () => {
-      if (Platform.OS === "android") {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-        );
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          console.error("Location permission denied");
-          return;
-        }
-      }
-
-      Geolocation.watchPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          dispatch(actions.setCurrentLocation({ latitude, longitude }));
-        },
-        (error) => console.error("Error watching position", error),
-        {
-          enableHighAccuracy: true,
-          distanceFilter: 10,
-        }
-      );
-    };
-
-    requestPermissions();
-    dispatch(getAllRequests());
-
-    return () => {
-      Geolocation.stopObserving();
-    };
-  }, [dispatch]);
-
-  const handleRequestPress = async (request) => {
-    if (request.state === "accepted") {
-      const destination = {
-        latitude: request.latitude,
-        longitude: request.longitude,
-      };
-
-      if (userLocation) {
-        const url = `https://router.project-osrm.org/route/v1/driving/${userLocation.longitude},${userLocation.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson`;
-
-        try {
-          const response = await axios.get(url);
-          const route = response.data.routes[0].geometry.coordinates.map(
-            ([lon, lat]) => ({
-              latitude: lat,
-              longitude: lon,
-            })
-          );
-
-          dispatch(actions.setRequestLocation(destination));
-          dispatch(actions.setRescueRoute(route));
-
-          // Use mapRef to focus on the route
-          mapRef.current.fitToCoordinates(route, {
-            edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-            animated: true,
-          });
-
-          navigation.navigate("OngoingRequest", { request });
-        } catch (error) {
-          console.error("Error fetching route:", error);
-        }
-      } else {
-        console.error("User location is not available");
-      }
-    } else {
-      setSelectedRequest(request);
-      setModalVisible(true);
-    }
+  const location = useSelector((state) => state.userLocation.currentLocation);
+  const userLocation = useMemo(() => location, [location]);
+  const handleRequestPress = (request) => {
+    setSelectedRequest(request);
+    setModalVisible(true);
   };
-
   const handleCloseModal = () => {
     setModalVisible(false);
     setSelectedRequest(null);
   };
+  const handleInitRescue = (request) => {
+    dispatch(setRequestLocation(request));
+    navigation.navigate("OngoingRequest", { request });
+  };
+  useEffect(() => {
+    dispatch(fetchAllRequests());
+  }, [dispatch]);
 
   const renderMapView = () => {
-    if (!userLocation || !userLocation.latitude || !userLocation.longitude) {
+    if (
+      !userLocation ||
+      !userLocation.latitude ||
+      !userLocation.longitude ||
+      loading
+    ) {
       return (
         <Text>Map loading... Please ensure location services are enabled.</Text>
       );
@@ -123,7 +64,6 @@ const ARSHomeScreen = () => {
 
     return (
       <MapView
-        ref={mapRef} // Step 2: Attach mapRef
         style={styles.map}
         initialRegion={{
           latitude: userLocation.latitude,
@@ -138,7 +78,6 @@ const ARSHomeScreen = () => {
         moveOnMarkerPress={false}
         showsCompass={true}
         showsPointsOfInterest={false}
-        provider="google"
       >
         {requests.map((request) => (
           <Marker
@@ -150,7 +89,13 @@ const ARSHomeScreen = () => {
             title={request.firstName}
             description={request.specificProblem}
             pinColor="purple"
-            onPress={() => handleRequestPress(request)}
+            onPress={() => {
+              if (request.state === "accepted") {
+                handleInitRescue(request);
+              } else {
+                handleRequestPress(request);
+              }
+            }}
           />
         ))}
       </MapView>
@@ -171,7 +116,11 @@ const ARSHomeScreen = () => {
             <View style={styles.requestItem}>
               <View style={styles.requestInfo}>
                 <Image
-                  source={{ uri: "https://via.placeholder.com/50" }}
+                  source={{
+                    uri: item.profilePicUrl
+                      ? item.profilePicUrl
+                      : "https://via.placeholder.com/50",
+                  }}
                   style={styles.requestImage}
                 />
                 <View style={styles.requestDetails}>
@@ -179,7 +128,7 @@ const ARSHomeScreen = () => {
                     {item.firstName} {item.lastName}
                   </Text>
                   <Text style={styles.problemText}>
-                    Concern: {item.specificProblem}
+                    Service Request: {item.specificProblem}
                   </Text>
                   <Text style={styles.statusText}>{item.state}</Text>
                 </View>
@@ -187,7 +136,11 @@ const ARSHomeScreen = () => {
               <TouchableOpacity
                 style={styles.navigateButton}
                 onPress={() => {
-                  handleRequestPress(item);
+                  if (item.state === "accepted") {
+                    handleInitRescue(item);
+                  } else {
+                    handleRequestPress(item);
+                  }
                 }}
               >
                 <Ionicons name="arrow-forward" size={24} color="#000" />
@@ -202,14 +155,13 @@ const ARSHomeScreen = () => {
           animationType="slide"
         >
           {selectedRequest ? (
-            selectedRequest.state === "accepted" ? (
-              <EndTicket request={selectedRequest} onClose={handleCloseModal} />
-            ) : (
-              <RequestTicket
-                request={selectedRequest}
-                onClose={handleCloseModal}
-              />
-            )
+            <RequestTicket
+              request={selectedRequest}
+              onClose={handleCloseModal}
+              onAcceptRequest={(request) => {
+                navigation.navigate("OngoingRequest", { request });
+              }}
+            />
           ) : (
             <View>
               <Text>No request selected</Text>

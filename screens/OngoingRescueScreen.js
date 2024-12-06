@@ -1,12 +1,24 @@
-import React, { useEffect, useState, useRef } from "react";
-import { SafeAreaView, Modal, Button, StyleSheet } from "react-native";
+import React, { useEffect, useState, useRef, useMemo } from "react";
+import {
+  SafeAreaView,
+  Modal,
+  Button,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
-import Geolocation from "react-native-geolocation-service";
+import * as Location from "expo-location";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { actions } from "../redux/map/userLocation";
+import {
+  actions as requestActions,
+  setRescueRoute,
+} from "../redux/requests/requests";
 import EndTicket from "../components/modals/endTicketModal";
-// Helper to calculate distance using Haversine formula
+import { useNavigation } from "@react-navigation/native";
+import { db, auth } from "../firebase";
+import { doc, setDoc, updateDoc, onSnapshot } from "firebase/firestore";
 const getDistance = (coord1, coord2) => {
   const toRad = (value) => (value * Math.PI) / 180;
 
@@ -27,100 +39,184 @@ const getDistance = (coord1, coord2) => {
   return R * c; // Distance in meters
 };
 
-const OngoingRequestScreen = ({ route, navigation }) => {
+const constructRouteUrl = (startCoords, endCoords) => {
+  const start = `${startCoords.longitude},${startCoords.latitude}`;
+  const end = `${endCoords.longitude},${endCoords.latitude}`;
+
+  return `https://router.project-osrm.org/route/v1/driving/${start};${end}?overview=full&geometries=geojson`;
+};
+
+const fetchAndDispatchRoute = async (startCoords, endCoords, dispatch) => {
+  const url = constructRouteUrl(startCoords, endCoords);
+  try {
+    const response = await axios.get(url);
+    const route = response.data.routes[0].geometry.coordinates.map(
+      ([lon, lat]) => ({
+        latitude: lat,
+        longitude: lon,
+      })
+    );
+    dispatch(setRescueRoute(route));
+  } catch (error) {
+    console.error("Error fetching route:", error);
+  }
+};
+const OngoingRequestScreen = ({ route }) => {
   const { request } = route.params;
   const dispatch = useDispatch();
+  const navigation = useNavigation();
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isModalVisible, setModalVisible] = useState(false);
 
   const userLocation = useSelector(
     (state) => state.userLocation.currentLocation
   );
-  const rescueRoute = useSelector((state) => state.requests.rescueRoute);
+  const rescue = useSelector((state) => state.requests.rescueRoute);
+  const rescueRoute = useMemo(() => rescue, [rescue]);
   const requestLocation = useSelector(
     (state) => state.requests.requestLocation
   );
   const shopLocation = useSelector((state) => state.requests.shopLocation);
-  const destination =
-    Object.keys(requestLocation).length > 0
-      ? requestLocation
-      : Object.keys(shopLocation).length > 0
-      ? shopLocation
-      : {};
-  const [isModalVisible, setModalVisible] = useState(false);
-  const lastLocation = useRef(userLocation); // Track the last location for distance calculations
+  const { currentUser } = useSelector((state) => state.user);
 
-  useEffect(() => {
-    if (!destination || !Object.keys(destination).length) {
-      navigation.goBack();
-      return;
+  const destination = useMemo(
+    () =>
+      Object.keys(requestLocation).length
+        ? requestLocation
+        : Object.keys(shopLocation).length
+        ? shopLocation
+        : null,
+    [requestLocation, shopLocation]
+  );
+
+  const lastLocation = useRef(userLocation);
+  const fetchAndDispatchRoute = async (startCoords, endCoords, dispatch) => {
+    const url = constructRouteUrl(startCoords, endCoords);
+    try {
+      const response = await axios.get(url);
+      const route = response.data.routes[0].geometry.coordinates.map(
+        ([lon, lat]) => ({
+          latitude: lat,
+          longitude: lon,
+        })
+      );
+      dispatch(setRescueRoute(route));
+    } catch (error) {
+      console.error("Error fetching route:", error);
     }
+  };
+  // Load all necessary data asynchronously
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        // Request permissions and get initial user location
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          console.error("Location permissions not granted");
+          return;
+        }
 
-    // Start listening to the user's location
-    const watchId = Geolocation.watchPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        const newLocation = { latitude, longitude };
+        const currentLocation = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = currentLocation.coords;
+        dispatch(actions.setCurrentLocation({ latitude, longitude }));
 
-        // Calculate the distance from the last location
-        const distance = getDistance(lastLocation.current, newLocation);
+        // Fetch route if not already available
+        if (destination) {
+          await fetchAndDispatchRoute(
+            { latitude, longitude },
+            destination,
+            dispatch
+          );
+        }
 
-        if (distance > 100) {
-          // Update the Redux store with the new user location
-          dispatch(actions.setCurrentLocation(newLocation));
-
-          // Update Firestore
-          try {
-            await firestore().collection("ongoingShopRescue").add({
+        // Set Firestore data for shops
+        if (currentUser?.role === "Shop") {
+          const rescueDoc = doc(db, "shopOnRescue", request.id);
+          await setDoc(
+            rescueDoc,
+            {
+              userId: request.userId,
+              storeId: auth.currentUser.uid,
+              state: "ongoing",
               longitude,
               latitude,
-              requestId: request.id,
-              shopId: auth().currentUser.uid,
-            });
-            console.log("Location updated in Firestore");
-          } catch (error) {
-            console.error("Error posting location to Firestore:", error);
-          }
-
-          // Recalculate the rescue route
-          const start = `${longitude},${latitude}`;
-          const end = `${destination.longitude},${destination.latitude}`;
-          const url = `https://router.project-osrm.org/route/v1/driving/${start};${end}?overview=full&geometries=geojson`;
-
-          try {
-            const response = await axios.get(url);
-            const updatedRoute =
-              response.data.routes[0].geometry.coordinates.map(
-                ([lon, lat]) => ({
-                  latitude: lat,
-                  longitude: lon,
-                })
-              );
-
-            // Update the Redux store with the new route
-            dispatch(actions.setRescueRoute(updatedRoute));
-          } catch (error) {
-            console.error("Error updating rescue route:", error);
-          }
-
-          // Update the last location
-          lastLocation.current = newLocation;
+              timestamp: new Date().toISOString(),
+            },
+            { merge: true }
+          );
         }
-      },
-      (error) => console.error("Error watching position:", error),
-      { enableHighAccuracy: true, distanceFilter: 10 }
-    );
+      } catch (error) {
+        console.error("Error initializing data:", error);
+      } finally {
+        setIsLoading(false); // Ensure loading ends
+      }
+    };
 
-    // Cleanup: Stop location tracking when component unmounts
-    return () => Geolocation.clearWatch(watchId);
-  }, [dispatch, destination]);
+    initializeData();
+  }, [
+    dispatch,
+    destination,
+    rescueRoute.length,
+    currentUser?.role,
+    request.id,
+  ]);
 
-  const handleEndRequest = () => {
-    setModalVisible(true);
-  };
+  // Location tracking and Firestore updates
+  useEffect(() => {
+    let locationSubscription;
+
+    const trackLocation = async () => {
+      try {
+        locationSubscription = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.High,
+            distanceInterval: 10,
+          },
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            const newLocation = { latitude, longitude };
+            const distance = getDistance(lastLocation.current, newLocation);
+
+            if (distance > 100) {
+              dispatch(actions.setCurrentLocation(newLocation));
+
+              if (currentUser?.role === "Shop") {
+                await updateDoc(doc(db, "shopOnRescue", request.id), {
+                  latitude,
+                  longitude,
+                  timestamp: new Date().toISOString(),
+                });
+              }
+
+              f(newLocation, destination, dispatch);
+              lastLocation.current = newLocation;
+            }
+          }
+        );
+      } catch (error) {
+        console.error("Error tracking location:", error);
+      }
+    };
+
+    trackLocation();
+    return () => locationSubscription?.remove();
+  }, [dispatch, destination, request.id, currentUser?.role]);
+
+  const handleEndRequest = () => setModalVisible(true);
 
   const handleCloseModal = () => {
     setModalVisible(false);
     navigation.goBack();
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.loader}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -133,27 +229,32 @@ const OngoingRequestScreen = ({ route, navigation }) => {
           longitudeDelta: 0.05,
         }}
       >
-        <Marker
-          coordinate={userLocation}
-          title="Your Location"
-          pinColor="blue"
-        />
-        <Marker
-          coordinate={destination}
-          title={request.firstName}
-          description={request.specificProblem}
-          pinColor="purple"
-        />
-        <Polyline
-          coordinates={rescueRoute}
-          strokeWidth={4}
-          strokeColor="blue"
-        />
+        {userLocation && (
+          <Marker
+            coordinate={userLocation}
+            title="Your Location"
+            pinColor="blue"
+          />
+        )}
+        {destination && (
+          <Marker
+            coordinate={destination}
+            title={"Destination"}
+            pinColor="purple"
+          />
+        )}
+        {rescueRoute.length > 0 && (
+          <Polyline
+            coordinates={rescueRoute}
+            strokeWidth={4}
+            strokeColor="blue"
+          />
+        )}
       </MapView>
       <Button title="End Request" onPress={handleEndRequest} />
       <Modal
         visible={isModalVisible}
-        transparent={true}
+        transparent
         animationType="slide"
         onRequestClose={handleCloseModal}
       >
@@ -163,9 +264,14 @@ const OngoingRequestScreen = ({ route, navigation }) => {
   );
 };
 
-export default OngoingRequestScreen;
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });
+
+export default OngoingRequestScreen;

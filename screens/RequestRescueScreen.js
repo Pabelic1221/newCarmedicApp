@@ -8,42 +8,28 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  ActivityIndicatorBase,
 } from "react-native";
 import AppBar from "./AppBar";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useSelector, useDispatch } from "react-redux";
-import { getAllShops } from "../redux/shops/shopsActions";
 import { useNavigation } from "@react-navigation/native";
 import MapView, { Marker, Polyline } from "react-native-maps";
+import { fetchAllShops } from "../redux/shops/shopsThunk";
 
 const RequestRescueScreen = () => {
   const navigation = useNavigation();
-  const dispatch = useDispatch();
   const mapRef = useRef(null); // New useRef for MapView
   const flatListRef = useRef(null);
-  const [selectedShop, setSelectedShop] = useState(null);
-  const [routeCoordinates, setRouteCoordinates] = useState([]);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
 
-  useEffect(() => {
-    const fetchShops = async () => {
-      try {
-        await dispatch(getAllShops());
-        fitAllMarkers(); // Fit markers after fetching shops
-      } catch (err) {
-        setError("Failed to load shops");
-        Alert.alert("Error", "Failed to load shops. Please try again later.");
-      }
-    };
-
-    fetchShops();
-  }, [dispatch]);
-
-  const shops = useSelector((state) => state.shops.shops);
+  const { shops, loading, error } = useSelector((state) => state.shops);
   const userLocation = useSelector(
     (state) => state.userLocation.currentLocation
   );
-
+  useEffect(() => {
+    dispatch(fetchAllShops());
+  }, [dispatch]);
   const fitAllMarkers = () => {
     if (shops.length > 0 && mapRef.current) {
       const coordinates = shops.map((shop) => ({
@@ -113,7 +99,12 @@ const RequestRescueScreen = () => {
   );
 
   const renderMapView = () => {
-    if (!userLocation || !userLocation.latitude || !userLocation.longitude) {
+    if (
+      !userLocation ||
+      !userLocation.latitude ||
+      !userLocation.longitude ||
+      loading
+    ) {
       return (
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>
@@ -139,28 +130,18 @@ const RequestRescueScreen = () => {
       >
         {shops.map((shop) => {
           const { longitude, latitude } = shop;
-          if (longitude && latitude) {
-            return (
-              <Marker
-                key={shop.id}
-                coordinate={{ longitude, latitude }}
-                title={shop.shopName}
-                description={shop.address}
-                pinColor="purple"
-                onPress={() => handleMarkerPress(shop)}
-              />
-            );
-          }
-          return null;
-        })}
 
-        {routeCoordinates.length > 0 && (
-          <Polyline
-            coordinates={routeCoordinates}
-            strokeColor="blue"
-            strokeWidth={3}
-          />
-        )}
+          return (
+            <Marker
+              key={shop.id}
+              coordinate={{ longitude, latitude }}
+              title={shop.shopName}
+              description={shop.address}
+              pinColor="purple"
+              onPress={() => handleMarkerPress(shop)}
+            />
+          );
+        })}
       </MapView>
     );
   };

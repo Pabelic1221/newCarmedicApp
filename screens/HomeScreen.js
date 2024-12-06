@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,11 +9,16 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AppBar from "./AppBar"; // Import AppBar component
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import PropTypes from "prop-types";
+import { getAllShops } from "../redux/shops/shopsActions";
+import { fetchAllShops } from "../redux/shops/shopsThunk";
 const HomeScreen = () => {
-  const navigation = useNavigation(); // Initialize navigation
-
+  const navigation = useNavigation();
+  const dispatch = useDispatch(); // Initialize navigation
+  useEffect(() => {
+    dispatch(fetchAllShops());
+  }, [dispatch]);
   return (
     <SafeAreaView style={styles.container}>
       <AppBar />

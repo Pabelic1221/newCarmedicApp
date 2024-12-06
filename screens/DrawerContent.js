@@ -11,6 +11,10 @@ import { useNavigation } from "@react-navigation/native";
 import { auth, db } from "../firebase"; // Ensure you have db imported
 import { signOut } from "firebase/auth";
 import { actions } from "../redux/user/user";
+import { resetRequests } from "../redux/requests/requests";
+import { actions as userLocationActions } from "../redux/map/userLocation";
+import { resetShops, actions as shopsActions } from "../redux/shops/shops";
+
 import { useDispatch } from "react-redux";
 import { doc, getDoc } from "firebase/firestore"; // Import Firestore methods
 
@@ -41,7 +45,10 @@ const DrawerContent = memo((props) => {
   const handleSignOut = () => {
     signOut(auth)
       .then(() => {
-        dispatch(actions.resetUser()); // Reset user state in Redux
+        dispatch(actions.resetUser());
+        dispatch(resetRequests());
+        dispatch(userLocationActions.resetLocation());
+        dispatch(resetShops()); // Reset user state in Redux
         navigation.replace("Login");
       })
       .catch((error) => alert(error.message));

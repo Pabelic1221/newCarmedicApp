@@ -14,6 +14,12 @@ import { signOut } from "firebase/auth";
 import { actions } from "../redux/user/user";
 import { useDispatch } from "react-redux";
 import { doc, getDoc } from "firebase/firestore"; // Firestore functions
+import {
+  actions as requestActions,
+  resetRequests,
+} from "../redux/requests/requests";
+import { actions as userLocationActions } from "../redux/map/userLocation";
+import { resetShops, actions as shopsActions } from "../redux/shops/shops";
 
 const ShopDrawerContent = memo((props) => {
   const navigation = useNavigation();
@@ -48,7 +54,10 @@ const ShopDrawerContent = memo((props) => {
   const handleSignOut = () => {
     signOut(auth)
       .then(() => {
-        dispatch(actions.resetUser()); // Reset user state in Redux
+        dispatch(actions.resetUser());
+        dispatch(resetRequests());
+        dispatch(userLocationActions.resetLocation());
+        dispatch(resetShops());
         navigation.replace("Login");
       })
       .catch((error) => alert(error.message));

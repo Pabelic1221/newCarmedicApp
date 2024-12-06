@@ -105,7 +105,7 @@ const ChatList = () => {
       <View style={styles.chatItem}>
         <Image
           source={{
-            uri: item.userPhotoUrl || "https://via.placeholder.com/50",
+            uri: item.profilePicUrl || "https://via.placeholder.com/50",
           }}
           style={styles.profileImage}
         />

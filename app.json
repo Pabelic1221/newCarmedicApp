@@ -1,5 +1,13 @@
 {
   "expo": {
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ]
+    ],
     "name": "Carmedic-app",
     "slug": "Carmedic-app",
     "version": "1.0.0",
@@ -24,7 +32,7 @@
       },
       "config": {
         "googleMaps": {
-          "apiKey": "a14cc3d617msh625ae270f0240b8p1061b9jsnc47df9cca470"
+           "apiKey": "AIzaSyDvYGYRHleXi7MNn7wzltiRfy4ze5T7IrY"
         }
       }
     },

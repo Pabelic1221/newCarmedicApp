@@ -12,10 +12,11 @@ import {
 import { useNavigation } from "@react-navigation/core";
 import { auth } from "../firebase";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { getCurrentUser, updateUserStatus } from "../redux/user/userActions";
 
 const LoginScreen = () => {
+  const { currentUser } = useSelector((state) => state.user);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(true); // State for initial loading
@@ -46,6 +47,11 @@ const LoginScreen = () => {
     // Cleanup subscription
     return unsubscribe;
   }, []);
+  useEffect(() => {
+    if (currentUser?.id) {
+      navigation.replace("Main");
+    }
+  }, [currentUser]);
 
   const handleLogin = async () => {
     setLoading(true); // Show loading when login is in progress
@@ -67,7 +73,7 @@ const LoginScreen = () => {
 
         // Wait for a moment before navigating
         setTimeout(() => {
-          navigation.navigate("Main");
+          navigation.replace("Main");
         }, 1000); // Adjust the timeout duration as needed
       } else {
         Alert.alert(

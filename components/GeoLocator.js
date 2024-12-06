@@ -39,9 +39,12 @@ export default function GeoLocator({ children }) {
             latitude !== previousLatitude ||
             longitude !== previousLongitude
           ) {
-            dispatch(userLocationActions.setCurrentLocation(newLocation.coords));
+            dispatch(
+              userLocationActions.setCurrentLocation(newLocation.coords)
+            );
             previousLatitude = latitude; // Update previous latitude
             previousLongitude = longitude; // Update previous longitude
+            console.log(previousLatitude, previousLongitude);
           }
         }
       );
