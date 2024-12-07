@@ -18,7 +18,6 @@ import { store, persistor } from "./redux/store";
 import GeoLocator from "./components/GeoLocator";
 import { View, Text } from "react-native";
 import { auth } from "./firebase"; // Assuming you're using Firebase for authentication
-import ARSHomeScreen from "./screens/ARSHomeScreen";
 import SpecialtiesScreen from "./screens/SpecialtiesScreen";
 
 const Stack = createNativeStackNavigator();

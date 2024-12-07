@@ -14,7 +14,6 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { auth, db } from "../firebase";
 import { useSelector } from "react-redux";
-import { launchImageLibrary } from "react-native-image-picker";
 import { doc, updateDoc } from "firebase/firestore";
 import AppBar from "./AppBar"; // Import your AppBar component
 import { uploadImageToCloudinary } from "../helpers/cloudinary";
