@@ -44,7 +44,6 @@ const RequestRescueScreen = () => {
   };
 
   const handleMarkerPress = (shop) => {
-    setSelectedShop(shop);
     const index = shops.findIndex((s) => s.id === shop.id);
     if (flatListRef.current && index !== -1) {
       flatListRef.current.scrollToIndex({ index, animated: true });

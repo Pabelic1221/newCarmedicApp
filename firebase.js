@@ -17,9 +17,6 @@ const firebaseConfig = {
   appId: "1:873364370703:web:dc2a463af427cd271d3a7a",
   measurementId: "G-G6WTDZB2Z9",
 };
-const fcmKey =
-  "BFQuK7OOnrS9d7liTOvshOIxY2QRmu-HQfhVRcNmpHUBgQcyU1_DHjiIL7iC6gkudoENLXDZtKrJkqJP_RnBgzQ";
-
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
@@ -34,4 +31,4 @@ const db = getFirestore(app);
 // Initialize Firebase Storage
 const storage = getStorage(app); // Add Storage Initialization
 
-export { auth, db, storage, fcmKey }; // Export storage alongside auth and db
+export { auth, db, storage }; // Export storage alongside auth and db
