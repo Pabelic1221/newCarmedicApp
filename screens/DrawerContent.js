@@ -15,32 +15,13 @@ import { resetRequests } from "../redux/requests/requests";
 import { actions as userLocationActions } from "../redux/map/userLocation";
 import { resetShops, actions as shopsActions } from "../redux/shops/shops";
 
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { doc, getDoc } from "firebase/firestore"; // Import Firestore methods
 
 const DrawerContent = memo((props) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const [firstName, setFirstName] = useState(""); // State for first name
-  const [lastName, setLastName] = useState("");
-  const [userData, setUserData] = useState({}); // State for last name
-
-  useEffect(() => {
-    const fetchUserNames = async () => {
-      const userId = auth.currentUser?.uid; // Get the current user ID
-      if (userId) {
-        const userDoc = doc(db, "users", userId); // Adjust the collection name if necessary
-        const userSnapshot = await getDoc(userDoc);
-        if (userSnapshot.exists()) {
-          const data = userSnapshot.data();
-          setFirstName(data.firstName); // Set the first name from Firestore
-          setLastName(data.lastName);
-          setUserData((prev) => ({ ...prev, ...data })); // Set the last name from Firestore
-        }
-      }
-    };
-    fetchUserNames();
-  }, []);
+  const user = useSelector((state) => state.user.currentUser);
 
   const handleSignOut = () => {
     signOut(auth)
@@ -59,9 +40,10 @@ const DrawerContent = memo((props) => {
       <View style={styles.userInfo}>
         <Image
           source={{
-            uri: userData.profilePicUrl
-              ? userData.profilePicUrl
-              : "https://via.placeholder.com/80",
+            uri:
+              user.profilePicUrl && user.profilePicUrl !== ""
+                ? user.profilePicUrl
+                : "https://via.placeholder.com/80",
           }}
           style={styles.profileImage}
         />
@@ -71,7 +53,8 @@ const DrawerContent = memo((props) => {
         >
           {/* Display both first name and last name in one button */}
           <Text style={styles.userName}>
-            {firstName} {lastName} {/* Concatenate first and last name */}
+            {user.firstName} {user.lastName}{" "}
+            {/* Concatenate first and last name */}
           </Text>
         </TouchableOpacity>
       </View>

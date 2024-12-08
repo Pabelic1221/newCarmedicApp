@@ -155,6 +155,7 @@ const ShopProfile = () => {
       });
 
       Alert.alert("Success", "Shop profile updated successfully.");
+      dispatch(getCurrentUser());
       setIsEdited(false);
     } catch (error) {
       Alert.alert("Error", error.message);

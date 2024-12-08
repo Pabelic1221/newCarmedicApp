@@ -1,29 +1,32 @@
 import PropTypes from "prop-types";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Text } from "react-native";
 import MapView from "react-native-maps";
 import { useSelector } from "react-redux";
+
 export const MapComponent = ({ children, ...props }) => {
   const { latitude, longitude } = useSelector(
     (state) => state.userLocation.currentLocation
   );
-  if (!longitude || !latitude) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text>Loading map...</Text>
-      </View>
-    );
-  }
+
+  // Fallback location for Cagayan de Oro City
+  const fallbackLocation = {
+    latitude: 8.4542,
+    longitude: 124.6319,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+  };
+
+  const region =
+    latitude && longitude
+      ? { latitude, longitude, latitudeDelta: 0.0922, longitudeDelta: 0.0421 }
+      : fallbackLocation;
+
   return (
     <View style={styles.mapContainer}>
       <MapView
         style={styles.map}
         showsUserLocation={true}
-        initialRegion={{
-          latitude,
-          longitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        }}
+        initialRegion={region}
         {...props}
       >
         {children}

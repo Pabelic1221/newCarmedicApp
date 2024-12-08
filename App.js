@@ -23,29 +23,6 @@ import SpecialtiesScreen from "./screens/SpecialtiesScreen";
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        const role = await getUserRole(user.uid); // Fetch the user role
-        setUserRole(role);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  if (loading) {
-    return (
-      <View>
-        <Text>Loading...</Text>
-      </View>
-    ); // Show a loading screen while checking user role
-  }
-
   return (
     <Provider store={store}>
       <PersistGate
@@ -75,16 +52,9 @@ export default function App() {
                 component={ShopRegisterScreen}
               />
               {/* Main App Navigation */}
-              {userRole === "shop" && (
-                <Stack.Screen name="Main" component={DrawerNavigator} />
-              )}
-              {userRole === "user" && (
-                <Stack.Screen name="UserProfile" component={UserProfile} />
-              )}
 
-              {/* Chat Screen */}
-              <Stack.Screen name="ChatScreen" component={ChatScreen} />
-              <Stack.Screen name="ChatList" component={ChatList} />
+              <Stack.Screen name="Main" component={DrawerNavigator} />
+
               <Stack.Screen name="Specialties" component={SpecialtiesScreen} />
             </Stack.Navigator>
           </NavigationContainer>
@@ -92,12 +62,4 @@ export default function App() {
       </PersistGate>
     </Provider>
   );
-}
-
-// Function to get user role from your database
-async function getUserRole(uid) {
-  // Implement your logic to fetch the user role from your database
-  // This is a placeholder function
-  // You would typically query your database here and return the role
-  return "shop"; // or "user" based on the user's role
 }

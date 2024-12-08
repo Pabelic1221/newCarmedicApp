@@ -21,7 +21,7 @@ import {
 } from "firebase/firestore";
 import AppBar from "./AppBar";
 import { useNavigation } from "@react-navigation/native";
-import { actions } from "../redux/requests/requests";
+import { setShopLocation } from "../redux/requests/requests";
 
 const UserRequestLogScreen = () => {
   const [requests, setRequests] = useState([]);
@@ -38,7 +38,7 @@ const UserRequestLogScreen = () => {
       if (docSnapshot.exists()) {
         const shopData = docSnapshot.data();
         if (shopData.state === "ongoing") {
-          dispatch(actions.setShopLocation(shopData));
+          dispatch(setShopLocation(shopData));
           navigation.navigate("OngoingRequest", { request: item });
         } else {
           console.log("The shop rescue is not ongoing.");
@@ -54,7 +54,6 @@ const UserRequestLogScreen = () => {
   useEffect(() => {
     if (!currentUser) return;
 
-    // Listen for real-time updates to the user's requests
     const requestsRef = collection(db, "requests");
     const q = query(requestsRef, where("userId", "==", currentUser.id));
 
@@ -64,7 +63,6 @@ const UserRequestLogScreen = () => {
       for (const docSnap of querySnapshot.docs) {
         const requestData = docSnap.data();
 
-        // Fetch shopName using the storeId
         const shopDocRef = doc(db, "shops", requestData.storeId);
         const shopDocSnap = await getDoc(shopDocRef);
         const shopName = shopDocSnap.exists()
@@ -74,22 +72,21 @@ const UserRequestLogScreen = () => {
         fetchedRequests.push({
           id: docSnap.id,
           ...requestData,
-          shopName, // Add the shopName to the request object
+          shopName,
         });
       }
 
-      // Sort requests by timestamp in descending order
       fetchedRequests.sort((a, b) => b.timestamp - a.timestamp);
 
       setRequests(fetchedRequests);
     });
 
-    return () => unsubscribe(); // Clean up listener on component unmount
+    return () => unsubscribe();
   }, [currentUser]);
 
   const renderRequestItem = ({ item }) => (
     <TouchableOpacity
-      style={styles.requestItem}
+      style={styles.card}
       onPress={async () => {
         if (item.state === "accepted") {
           await handleAcceptedRequest(item);
@@ -99,10 +96,10 @@ const UserRequestLogScreen = () => {
         setSelectedRequest(item);
       }}
     >
-      <Text style={styles.requestTitle}>{item.specificProblem} Request</Text>
-      <Text style={styles.requestDate}>Shop: {item.shopName}</Text>
-      <Text style={styles.requestDate}>
-        Date: {new Date(item.timestamp).toLocaleDateString()}{" "}
+      <Text style={styles.cardTitle}>{item.specificProblem} Request</Text>
+      <Text style={styles.cardSubtitle}>Shop: {item.shopName}</Text>
+      <Text style={styles.cardDate}>
+        {new Date(item.timestamp).toLocaleDateString()}{" "}
         {new Date(item.timestamp).toLocaleTimeString()}
       </Text>
     </TouchableOpacity>
@@ -119,8 +116,6 @@ const UserRequestLogScreen = () => {
           <Text style={styles.emptyMessage}>No previous requests found.</Text>
         }
       />
-
-      {/* Modal for Request Details */}
       <Modal
         visible={selectedRequest !== null}
         transparent={true}
@@ -158,9 +153,7 @@ const UserRequestLogScreen = () => {
               </>
             )}
             <TouchableOpacity
-              onPress={() => {
-                setSelectedRequest(null);
-              }}
+              onPress={() => setSelectedRequest(null)}
               style={styles.closeButton}
             >
               <Text style={styles.closeButtonText}>Close</Text>
@@ -173,7 +166,82 @@ const UserRequestLogScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  // Same styles as before
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 10,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 4,
+    color: "#333",
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    color: "#555",
+  },
+  cardDate: {
+    fontSize: 12,
+    color: "#888",
+    marginTop: 8,
+  },
+  emptyMessage: {
+    textAlign: "center",
+    fontSize: 16,
+    color: "#888",
+    marginTop: 20,
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContainer: {
+    marginHorizontal: 16,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalHeader: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
+    textAlign: "center",
+    color: "#333",
+  },
+  modalText: {
+    fontSize: 14,
+    marginBottom: 8,
+    color: "#555",
+  },
+  closeButton: {
+    marginTop: 16,
+    backgroundColor: "#2196F3",
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  closeButtonText: {
+    textAlign: "center",
+    color: "#FFFFFF",
+    fontWeight: "bold",
+  },
 });
 
 export default UserRequestLogScreen;

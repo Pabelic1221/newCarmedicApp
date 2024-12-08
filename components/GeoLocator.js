@@ -25,6 +25,23 @@ export default function GeoLocator({ children }) {
         return;
       }
 
+      // Get initial location
+      let initialLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      const { latitude, longitude } = initialLocation.coords;
+
+      // Set initial location if previous latitude or longitude is null
+      if (previousLatitude === null || previousLongitude === null) {
+        dispatch(
+          userLocationActions.setCurrentLocation(initialLocation.coords)
+        );
+        previousLatitude = latitude;
+        previousLongitude = longitude;
+      }
+
+      // Start watching the location
       subscription = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
@@ -34,8 +51,10 @@ export default function GeoLocator({ children }) {
         (newLocation) => {
           const { latitude, longitude } = newLocation.coords;
 
-          // Check if the location has changed significantly
+          // Check if the location has changed or needs to be set
           if (
+            previousLatitude === null ||
+            previousLongitude === null ||
             latitude !== previousLatitude ||
             longitude !== previousLongitude
           ) {
@@ -44,7 +63,6 @@ export default function GeoLocator({ children }) {
             );
             previousLatitude = latitude; // Update previous latitude
             previousLongitude = longitude; // Update previous longitude
-            console.log(previousLatitude, previousLongitude);
           }
         }
       );

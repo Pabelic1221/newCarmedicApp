@@ -13,12 +13,14 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { auth, db } from "../firebase";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { doc, updateDoc } from "firebase/firestore";
 import AppBar from "./AppBar"; // Import your AppBar component
 import { uploadImageToCloudinary } from "../helpers/cloudinary";
 import * as ImagePicker from "expo-image-picker";
+import { getCurrentUser } from "../redux/user/userActions";
 const UserProfile = () => {
+  const dispatch = useDispatch();
   const navigation = useNavigation();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -57,20 +59,28 @@ const UserProfile = () => {
   };
 
   const handleUpdateProfile = async () => {
+    console.log("running");
     const userDocRef = doc(db, "users", auth.currentUser.uid);
     try {
-      const profilePicUrl = await uploadImageToCloudinary(profileImage);
+      let profilePicUrl;
+      if (profileImage) {
+        profilePicUrl = await uploadImageToCloudinary(profileImage);
+      }
+
       await updateDoc(userDocRef, {
         firstName,
         lastName,
         contact,
         address,
-        profilePicUrl,
+        profilePicUrl: profilePicUrl || "",
       });
       Alert.alert("Success", "Profile updated successfully.");
+
       setIsEdited(false); // Reset edited state after saving
     } catch (error) {
       Alert.alert("Error", error.message);
+    } finally {
+      dispatch(getCurrentUser());
     }
   };
 

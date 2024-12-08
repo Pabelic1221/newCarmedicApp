@@ -40,6 +40,8 @@ const LoginScreen = () => {
           );
           signOut(auth); // Ensure sign out completes
         }
+      } else {
+        signOut(auth);
       }
       setLoading(false); // Stop loading once user state is checked
     });
@@ -49,7 +51,9 @@ const LoginScreen = () => {
   }, []);
   useEffect(() => {
     if (currentUser?.id) {
-      navigation.replace("Main");
+      navigation.navigate("Main");
+    } else {
+      signOut(auth);
     }
   }, [currentUser]);
 
@@ -73,7 +77,7 @@ const LoginScreen = () => {
 
         // Wait for a moment before navigating
         setTimeout(() => {
-          navigation.replace("Main");
+          navigation.navigate("Main");
         }, 1000); // Adjust the timeout duration as needed
       } else {
         Alert.alert(
