@@ -11,8 +11,8 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { auth, db } from "../firebase";
 import { signOut } from "firebase/auth";
-import { actions } from "../redux/user/user";
-import { useDispatch } from "react-redux";
+import { actions, resetUser } from "../redux/user/user";
+import { useDispatch, useSelector } from "react-redux";
 import { doc, getDoc } from "firebase/firestore"; // Firestore functions
 import {
   actions as requestActions,
@@ -25,36 +25,25 @@ const ShopDrawerContent = memo((props) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [shopName, setShopName] = useState(""); // State to hold shopName
-  const [loading, setLoading] = useState(true); // State for loading indicator
+  const [isLoading, setIsLoading] = useState(true); // State for loading indicator
   const [shop, setShop] = useState({});
+  const { currentUser, status } = useSelector((state) => state.user);
   useEffect(() => {
-    const fetchShopName = async () => {
-      const currentUser = auth.currentUser; // Get current user
-      if (currentUser) {
-        try {
-          const shopDoc = await getDoc(doc(db, "shops", currentUser.uid));
-          if (shopDoc.exists()) {
-            const shopData = shopDoc.data();
-            setShop((prev) => ({ ...prev, ...shopData }));
-            setShopName(shopData.shopName); // Set shopName from Firestore
-          }
-        } catch (error) {
-          console.error("Error fetching shopName: ", error);
-        } finally {
-          setLoading(false); // Stop loading after the fetch attempt
-        }
-      } else {
-        setLoading(false); // Stop loading if no user is logged in
-      }
+    setIsLoading(status === "loading");
+  }, [status]);
+  useEffect(() => {
+    const fetchShopName = () => {
+      setShop((prev) => ({ ...prev, ...currentUser }));
+      setShopName(currentUser.shopName);
+      setIsLoading(false); // Set shopName from Firestore
     };
-
     fetchShopName();
-  }, []); // Empty dependency array ensures this runs only once when the component mounts
+  }, [currentUser]); // Empty dependency array ensures this runs only once when the component mounts
 
   const handleSignOut = () => {
     signOut(auth)
       .then(() => {
-        dispatch(actions.resetUser());
+        dispatch(resetUser());
         dispatch(resetRequests());
         dispatch(userLocationActions.resetLocation());
         dispatch(resetShops());
@@ -62,7 +51,14 @@ const ShopDrawerContent = memo((props) => {
       })
       .catch((error) => alert(error.message));
   };
-
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#000" />
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.userInfo}>
@@ -81,7 +77,7 @@ const ShopDrawerContent = memo((props) => {
           <Text style={styles.shopName}>{shopName || "Shop Name"}</Text>
         </TouchableOpacity>
       </View>
-      {loading ? (
+      {isLoading ? (
         <ActivityIndicator size="large" color="#000" style={styles.loader} />
       ) : (
         <View style={styles.drawerItemsContainer}>

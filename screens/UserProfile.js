@@ -18,7 +18,9 @@ import { doc, updateDoc } from "firebase/firestore";
 import AppBar from "./AppBar"; // Import your AppBar component
 import { uploadImageToCloudinary } from "../helpers/cloudinary";
 import * as ImagePicker from "expo-image-picker";
-import { getCurrentUser } from "../redux/user/userActions";
+import { fetchCurrentUser } from "../redux/user/userActions";
+import { ActivityIndicator } from "react-native-paper";
+
 const UserProfile = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
@@ -30,8 +32,8 @@ const UserProfile = () => {
   const [newPassword, setNewPassword] = useState("");
   const [profileImage, setProfileImage] = useState(null);
   const [isEdited, setIsEdited] = useState(false); // State to track if fields are edited
-  const currentUser = useSelector((state) => state.user.currentUser);
-
+  const { currentUser, status } = useSelector((state) => state.user);
+  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     // Load current user data if available
     if (currentUser) {
@@ -80,7 +82,7 @@ const UserProfile = () => {
     } catch (error) {
       Alert.alert("Error", error.message);
     } finally {
-      dispatch(getCurrentUser());
+      dispatch(fetchCurrentUser());
     }
   };
 
@@ -89,7 +91,17 @@ const UserProfile = () => {
     setter(value);
     setIsEdited(true); // Mark as edited
   };
-
+  useEffect(() => {
+    setIsLoading(status === "loading");
+  }, [status]);
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#000" />
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
   return (
     <SafeAreaView style={styles.container}>
       {/* Include the AppBar at the top */}

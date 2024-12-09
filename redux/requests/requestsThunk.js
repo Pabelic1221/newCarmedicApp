@@ -38,7 +38,7 @@ export const fetchAllRequests = createAsyncThunk(
               ...request,
               firstName,
               lastName,
-              profilePicUrl,
+              profilePicUrl: profilePicUrl || "",
             };
           }
 

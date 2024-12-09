@@ -10,23 +10,35 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { auth, db } from "../firebase"; // Ensure you have db imported
 import { signOut } from "firebase/auth";
-import { actions } from "../redux/user/user";
+import { actions, resetUser } from "../redux/user/user";
 import { resetRequests } from "../redux/requests/requests";
 import { actions as userLocationActions } from "../redux/map/userLocation";
 import { resetShops, actions as shopsActions } from "../redux/shops/shops";
 
 import { useDispatch, useSelector } from "react-redux";
 import { doc, getDoc } from "firebase/firestore"; // Import Firestore methods
+import { ActivityIndicator } from "react-native-paper";
 
 const DrawerContent = memo((props) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.user.currentUser);
-
+  const { currentUser, status } = useSelector((state) => state.user);
+  const [isLoading, setIsLoading] = useState();
+  useEffect(() => {
+    setIsLoading(status === "loading");
+  }, [status]);
+  if (isLoading && !currentUser) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#000" />
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
   const handleSignOut = () => {
     signOut(auth)
       .then(() => {
-        dispatch(actions.resetUser());
+        dispatch(resetUser());
         dispatch(resetRequests());
         dispatch(userLocationActions.resetLocation());
         dispatch(resetShops()); // Reset user state in Redux
@@ -34,6 +46,14 @@ const DrawerContent = memo((props) => {
       })
       .catch((error) => alert(error.message));
   };
+  if (status === "loading") {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#000" />
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -41,8 +61,8 @@ const DrawerContent = memo((props) => {
         <Image
           source={{
             uri:
-              user.profilePicUrl && user.profilePicUrl !== ""
-                ? user.profilePicUrl
+              currentUser.profilePicUrl && currentUser.profilePicUrl !== ""
+                ? currentUser.profilePicUrl
                 : "https://via.placeholder.com/80",
           }}
           style={styles.profileImage}
@@ -53,7 +73,7 @@ const DrawerContent = memo((props) => {
         >
           {/* Display both first name and last name in one button */}
           <Text style={styles.userName}>
-            {user.firstName} {user.lastName}{" "}
+            {currentUser.firstName} {currentUser.lastName}{" "}
             {/* Concatenate first and last name */}
           </Text>
         </TouchableOpacity>

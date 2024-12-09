@@ -19,6 +19,7 @@ import { fetchAllShops } from "../redux/shops/shopsThunk";
 
 const RequestRescueScreen = () => {
   const navigation = useNavigation();
+  const [isLoading, setLoading] = useState(true);
   const mapRef = useRef(null); // New useRef for MapView
   const flatListRef = useRef(null);
   const dispatch = useDispatch();
@@ -27,6 +28,9 @@ const RequestRescueScreen = () => {
   const userLocation = useSelector(
     (state) => state.userLocation.currentLocation
   );
+  useEffect(() => {
+    setLoading(loading);
+  }, [loading]);
   useEffect(() => {
     dispatch(fetchAllShops());
   }, [dispatch]);
@@ -102,7 +106,7 @@ const RequestRescueScreen = () => {
       !userLocation ||
       !userLocation.latitude ||
       !userLocation.longitude ||
-      loading
+      isLoading
     ) {
       return (
         <View style={styles.loadingContainer}>

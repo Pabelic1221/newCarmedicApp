@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import { useDispatch } from "react-redux";
 import { Alert, AppState } from "react-native";
 import { useEffect } from "react";
-import { getCurrentUser, updateUserStatus } from "../../redux/user/userActions";
+import { , fetchCurrentUser, updateUserStatus } from "../../redux/user/userActions";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../../firebase";
 import { useNavigation } from "@react-navigation/core";
@@ -20,7 +20,7 @@ export default function SessionChecker({ children }) {
             "Please verify your email before logging in."
           );
         } else if (user.emailVerified) {
-          dispatch(getCurrentUser());
+          dispatch(fetchCurrentUser());
         }
       }
     });

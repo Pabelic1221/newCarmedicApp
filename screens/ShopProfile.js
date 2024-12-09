@@ -12,13 +12,16 @@ import {
 } from "react-native";
 import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
-import { Marker } from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
 import { MapComponent } from "../components/map/MapComponent";
 import { uploadImageToCloudinary } from "../helpers/cloudinary";
 import { getAddressFromCoordinates } from "../helpers/maps/getAddress";
-import { Switch } from "react-native-paper";
+import { ActivityIndicator, Switch } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
 import ShopAppBar from "./ShopAppBar";
+import { useSelector } from "react-redux";
+import { fetchCurrentUser } from "../redux/user/userActions";
+
 const predefinedSpecialties = [
   "Towing",
   "Jump Start",
@@ -44,39 +47,39 @@ const ShopProfile = () => {
   const [customSpecialty, setCustomSpecialty] = useState("");
   const [customSpecialties, setCustomSpecialties] = useState([]);
   const [isEdited, setIsEdited] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
+  const userLocation = useSelector(
+    (state) => state.userLocation.currentLocation
+  );
+  const { currentUser, status } = useSelector((state) => state.user);
   useEffect(() => {
-    const loadShopData = async () => {
-      try {
-        const shopId = auth.currentUser.uid;
-        const shopDoc = await getDoc(doc(db, "shops", shopId));
-        if (shopDoc.exists()) {
-          const shopData = shopDoc.data();
-          setShopName(shopData.shopName || "");
-          setEmail(shopData.email || "");
-          setAddress(shopData.address || "");
-          setLatitude(shopData.latitude || null);
-          setLongitude(shopData.longitude || null);
-          setProfilePic(shopData.profilePicUrl || null);
-          setOwnerIdPic(shopData.ownerIdPicUrl || null);
+    setIsLoading(status === "loading");
+  }, [status]);
+  useEffect(() => {
+    const loadShopData = () => {
+      if (currentUser) {
+        setShopName(currentUser.shopName || "");
+        setEmail(currentUser.email || "");
+        setAddress(currentUser.address || "");
+        setLatitude(currentUser.latitude || null);
+        setLongitude(currentUser.longitude || null);
+        setProfilePic(currentUser.profilePicUrl || "");
+        setOwnerIdPic(currentUser.ownerIdPicUrl || "");
 
-          const specialties = shopData.specialties || [];
-          const initialSpecialties = {};
-          const initialCustomSpecialties = [];
+        const specialties = currentUser.specialties || [];
+        const initialSpecialties = {};
+        const initialCustomSpecialties = [];
 
-          specialties.forEach((spec) => {
-            if (predefinedSpecialties.includes(spec)) {
-              initialSpecialties[spec] = true;
-            } else {
-              initialCustomSpecialties.push(spec);
-            }
-          });
+        specialties.forEach((spec) => {
+          if (predefinedSpecialties.includes(spec)) {
+            initialSpecialties[spec] = true;
+          } else {
+            initialCustomSpecialties.push(spec);
+          }
+        });
 
-          setSelectedSpecialties(initialSpecialties);
-          setCustomSpecialties(initialCustomSpecialties);
-        }
-      } catch (error) {
-        Alert.alert("Error", "Failed to load shop data.");
+        setSelectedSpecialties(initialSpecialties);
+        setCustomSpecialties(initialCustomSpecialties);
       }
     };
 
@@ -149,18 +152,28 @@ const ShopProfile = () => {
         address,
         latitude,
         longitude,
-        profilePicUrl: profilePic,
-        ownerIdPicUrl: ownerIdPic,
+        profilePicUrl: profilePic ?? "",
+        ownerIdPicUrl: ownerIdPic ?? "",
         specialties,
       });
 
       Alert.alert("Success", "Shop profile updated successfully.");
-      dispatch(getCurrentUser());
+
       setIsEdited(false);
     } catch (error) {
       Alert.alert("Error", error.message);
+    } finally {
+      dispatch(fetchCurrentUser());
     }
   };
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#000" />
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -209,7 +222,16 @@ const ShopProfile = () => {
           value={address}
           editable={false}
         />
-        <MapComponent onPress={handleMapPress}>
+        <MapView
+          style={styles.map}
+          onPress={handleMapPress}
+          initialRegion={{
+            latitude: userLocation.latitude || 8.4542,
+            longitude: userLocation.longitude || 124.6319,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          }}
+        >
           {latitude && longitude && (
             <Marker
               coordinate={{ latitude, longitude }}
@@ -217,7 +239,7 @@ const ShopProfile = () => {
               pinColor="red"
             />
           )}
-        </MapComponent>
+        </MapView>
 
         {/* Specialties Section */}
         <Text style={styles.sectionTitle}>Specialties</Text>
@@ -290,6 +312,12 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 15,
     marginBottom: 10,
+  },
+  map: {
+    alignSelf: "center",
+    width: 300,
+    height: 400,
+    margin: 30,
   },
   sectionTitle: {
     fontSize: 16,

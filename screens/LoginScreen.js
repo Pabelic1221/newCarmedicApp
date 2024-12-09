@@ -13,25 +13,26 @@ import { useNavigation } from "@react-navigation/core";
 import { auth } from "../firebase";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { useDispatch, useSelector } from "react-redux";
-import { getCurrentUser, updateUserStatus } from "../redux/user/userActions";
+import { fetchCurrentUser, updateUserStatus } from "../redux/user/userActions";
 
 const LoginScreen = () => {
-  const { currentUser } = useSelector((state) => state.user);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(true); // State for initial loading
   const [navigating, setNavigating] = useState(false); // State for navigation loading
   const navigation = useNavigation();
   const dispatch = useDispatch();
-
+  const { currentUser, status } = useSelector((state) => state.user);
   // Check if a user is already logged in when the app loads
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         if (user.emailVerified) {
-          dispatch(getCurrentUser());
-          dispatch(updateUserStatus(user.uid, "online"));
+          dispatch(fetchCurrentUser());
+          dispatch(updateUserStatus({ userId: user.uid, status: "online" }));
           console.log("User is already logged in with:", user.email);
+
           navigation.navigate("Main");
         } else {
           Alert.alert(
@@ -49,13 +50,6 @@ const LoginScreen = () => {
     // Cleanup subscription
     return unsubscribe;
   }, []);
-  useEffect(() => {
-    if (currentUser?.id) {
-      navigation.navigate("Main");
-    } else {
-      signOut(auth);
-    }
-  }, [currentUser]);
 
   const handleLogin = async () => {
     setLoading(true); // Show loading when login is in progress
@@ -68,17 +62,19 @@ const LoginScreen = () => {
       const user = userCredentials.user;
       console.log("User  logged in");
       if (user.emailVerified) {
-        dispatch(getCurrentUser());
-        dispatch(updateUserStatus(user.uid, "online"));
+        dispatch(fetchCurrentUser());
+        dispatch(updateUserStatus({ userId: user.uid, status: "online" }));
         console.log("Logged in with:", user.email);
 
         // Set navigating to true before navigating
         setNavigating(true);
 
-        // Wait for a moment before navigating
-        setTimeout(() => {
-          navigation.navigate("Main");
-        }, 1000); // Adjust the timeout duration as needed
+        if (currentUser?.email) {
+          setTimeout(() => {
+            navigation.navigate("Main");
+          }, 1000);
+        }
+        // Adjust the timeout duration as needed
       } else {
         Alert.alert(
           "Email not verified",

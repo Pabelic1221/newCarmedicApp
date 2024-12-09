@@ -37,7 +37,7 @@ export const getAllRequests = () => {
               ...request,
               firstName,
               lastName,
-              profilePicUrl,
+              profilePicUrl: profilePicUrl || "",
             };
           }
 

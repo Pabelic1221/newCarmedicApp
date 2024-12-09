@@ -63,7 +63,7 @@ const TicketListener = ({ children }) => {
                   firstName,
                   lastName,
                   email,
-                  profilePicUrl,
+                  profilePicUrl: profilePicUrl || "",
                 };
               }
 

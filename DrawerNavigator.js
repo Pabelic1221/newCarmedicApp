@@ -1,6 +1,12 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
-import { StatusBar, Platform } from "react-native";
+import {
+  StatusBar,
+  Platform,
+  View,
+  Text,
+  ActivityIndicator,
+} from "react-native";
 import { useSelector } from "react-redux";
 
 // Screens
@@ -10,49 +16,61 @@ import AutoRepairShopScreen from "./screens/AutoRepairShopScreen";
 import ReviewsScreen from "./screens/ReviewsScreen";
 import FeedbackScreen from "./screens/FeedbackScreen";
 import DrawerContent from "./screens/DrawerContent";
-import ShopDrawerContent from "./screens/ShopDrawerContent"; // Import ShopDrawerContent
+import ShopDrawerContent from "./screens/ShopDrawerContent";
 import UserProfile from "./screens/UserProfile";
 import ARSHomeScreen from "./screens/ARSHomeScreen";
 import ShopListScreen from "./screens/ShopListScreen";
-import AppBar from "./screens/AppBar";
-import TicketListener from "./components/map/Shops/TicketListener";
+import OngoingRequestScreen from "./screens/OngoingRescueScreen";
 import Chat from "./screens/ChatScreen";
 import ChatList from "./components/chat/ChatList";
 import UserRequestLogScreen from "./screens/UserRequestLogScreen";
 import ShopProfile from "./screens/ShopProfile";
-import LoadingScreen from "./screens/LoadingScreen";
-import ShopAppBar from "./screens/ShopAppBar";
-import OngoingRequestScreen from "./screens/OngoingRescueScreen";
+
 const Drawer = createDrawerNavigator();
 
 function DrawerNavigator() {
-  const { currentUser } = useSelector((state) => state.user);
+  const { currentUser, status } = useSelector((state) => state.user);
+  const [isLoading, setIsLoading] = useState(false);
+  useEffect(() => {
+    setIsLoading(status === "loading");
+  }, [status]);
+  if (isLoading || !currentUser) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#000" />
+        <Text>Loading... User data</Text>
+      </View>
+    );
+  }
 
   return (
     <Drawer.Navigator
       detachInactiveScreens={false}
-      // Conditionally choose between ShopDrawerContent and DrawerContent
       drawerContent={(props) =>
         currentUser?.role === "Shop" ? (
           <ShopDrawerContent {...props} />
-        ) : (
+        ) : currentUser?.role === "User" ? (
           <DrawerContent {...props} />
+        ) : (
+          <View
+            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          >
+            <Text>Loading...</Text>
+          </View>
         )
       }
       screenOptions={{
         headerShown: false, // Hide headers for all drawer screens
         drawerType: "front",
-
         unmountOnBlur: false,
         drawerStyle: {
           width: 250,
           backgroundColor: "#fff",
-          marginTop: Platform.OS === "android" ? StatusBar.currentHeight : 0, // Add margin for Android
+          marginTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
         },
         overlayColor: "rgba(0,0,0,0.5)",
       }}
     >
-      {/* Conditionally load screens based on the user's role */}
       <Drawer.Screen
         name="Home"
         component={
@@ -60,12 +78,10 @@ function DrawerNavigator() {
             ? ARSHomeScreen
             : currentUser?.role === "User"
             ? HomeScreen
-            : LoadingScreen
+            : null // Prevent rendering while loading
         }
       />
-
       <Drawer.Screen name="Request" component={RequestRescueScreen} />
-
       <Drawer.Screen name="Auto Repair Shops" component={ShopListScreen} />
       <Drawer.Screen name="Reviews" component={ReviewsScreen} />
       <Drawer.Screen name="Auto Repair Shop" component={AutoRepairShopScreen} />
